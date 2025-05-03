@@ -44,11 +44,13 @@ def parse_args():
                    help="Discount factor.")
     p.add_argument("--eval_steps", type=int,   default=200,
                    help="Steps for final evaluation.")
+    p.add_argument("--gui_frequency", type=int, default=500,
+                   help="Frequency of episodes to enable GUI (e.g., every N episodes).")
     return p.parse_args()
 
 
 def main(GRID, no_gui, sigma, fps, episodes, random_seed,
-         epsilon, epsilon_min, decay_rate, gamma, eval_steps):
+         epsilon, epsilon_min, decay_rate, gamma, eval_steps, gui_frequency):
     for grid in GRID:
         env = Environment(grid,
                           no_gui=no_gui,
@@ -62,8 +64,8 @@ def main(GRID, no_gui, sigma, fps, episodes, random_seed,
         
         grid2 = Grid.load_grid(grid) # Load the grid from the file
         grid_height, grid_width = grid2.n_rows, grid2.n_cols
-        grid_size = round((grid_height * grid_width ) ** 0.5) * 2
-        print(f'The grid dimensions are {grid_height}x{grid_width} (size: {grid_size})')
+        grid_size = round((grid_height * grid_width ) ** 0.5) * 2 # needs work
+        #print(f'The grid dimensions are {grid_height}x{grid_width} (size: {grid_size})')
 
         for ep in trange(episodes, desc="Episodes"):
             # exponential decay of epsilon
@@ -72,11 +74,11 @@ def main(GRID, no_gui, sigma, fps, episodes, random_seed,
             ) * np.exp(-decay_rate * ep)
 
             episode = []
-            use_gui = ep%500 == 0
+            use_gui = ep % gui_frequency == 0
             state = env.reset(no_gui=not use_gui)
             done = False
             step = 0
-            max_steps = int(grid_size * (1 + np.log1p(ep*0.1))) 
+            max_steps = int(grid_size * (1 + np.log1p(ep*0.1))) #needs work
 
             while not done and step < max_steps:
                 action = agent.take_action(state)
@@ -98,4 +100,4 @@ def main(GRID, no_gui, sigma, fps, episodes, random_seed,
 if __name__ == '__main__':
     args = parse_args()
     main(args.GRID, args.no_gui, args.sigma, args.fps, args.episodes,args.random_seed,
-         args.epsilon,args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps)
+         args.epsilon,args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps, args.gui_frequency)
