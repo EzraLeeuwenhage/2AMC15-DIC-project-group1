@@ -38,3 +38,52 @@ class MonteCarloAgent(BaseAgent):
             # update returns and Q-value
             self.returns[(state,action)].append(G)
             self.Q[(state,action)] = float(np.mean(self.returns[(state,action)]))
+
+
+    def plot_q(self, grid_shape=(8,8)):
+        """ Plot a 2D heatmap showing the best action for each state (x, y) using arrows.
+        Empty cells indicate states not visited (e.g., walls or unreachable).
+        
+        Parameters:
+            grid_shape (tuple): (width, height) of the environment grid. """
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import numpy as np
+
+        arrow_map = {
+            0: '↓',  # Down
+            1: '↑',  # Up
+            2: '←',  # Left
+            3: '→',  # Right
+        }
+
+        width, height = grid_shape
+        grid = np.full((height, width), ' ', dtype=object)  # default to blank for unvisited states
+
+        # Find best action per state
+        best_actions = {}
+        for (state, action), q in self.Q.items():
+            if state not in best_actions or q > best_actions[state][1]:
+                best_actions[state] = (action, q)
+
+        # Fill in arrows only where we have data
+        for (x, y), (action, _) in best_actions.items():
+            if 0 <= x < width and 0 <= y < height:  # Ensure within bounds
+                grid[y, x] = arrow_map.get(action, '?')
+
+        plt.figure(figsize=(width, height))
+        sns.heatmap(np.zeros_like(grid, dtype=float), 
+                    cbar=False, 
+                    annot=grid, 
+                    fmt='', 
+                    linewidths=0.5,
+                    linecolor='gray',
+                    square=True,
+                    cmap="Greys")
+
+        plt.title("Best Action per State (as Arrows)")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        #plt.gca().invert_yaxis()
+        plt.tight_layout()
+        plt.show()
