@@ -54,6 +54,7 @@ class QLearningAgent(BaseAgent):
         
         Parameters:
             grid_shape (tuple): (width, height) of the environment grid. """
+
         import matplotlib.pyplot as plt
         import seaborn as sns
         import numpy as np
@@ -70,12 +71,13 @@ class QLearningAgent(BaseAgent):
 
         # Find best action per state
         best_actions = {}
-        for (state, action), q in self.Q.items():
-            if state not in best_actions or q > best_actions[state][1]:
-                best_actions[state] = (action, q)
-
+        for state in self.q_table:
+            best_action = np.argmax(self.q_table[state])
+            best_actions[state] = (best_action, self.q_table[state][best_action])
+        
         # Fill in arrows only where we have data
         for (x, y), (action, _) in best_actions.items():
+
             if 0 <= x < width and 0 <= y < height:  # Ensure within bounds
                 grid[y, x] = arrow_map.get(action, '?')
 
@@ -87,7 +89,8 @@ class QLearningAgent(BaseAgent):
                     linewidths=0.5,
                     linecolor='gray',
                     square=True,
-                    cmap="Greys")
+                    cmap="viridis")      # ← just change this
+                    # cmap="Greys")
 
         plt.title("Best Action per State (as Arrows)")
         plt.xlabel("x")
@@ -95,3 +98,5 @@ class QLearningAgent(BaseAgent):
         #plt.gca().invert_yaxis()
         plt.tight_layout()
         plt.show()
+        # plt.savefig("policy_heatmap.png")
+        # plt.close()

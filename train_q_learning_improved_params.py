@@ -7,6 +7,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from tqdm import trange
 import numpy as np
+from world.grid import Grid  # Import the Grid class
+from utils.plots import plot_max_diff
 
 try:
     from world import Environment
@@ -53,19 +55,22 @@ def main(grid_paths: list[Path], no_gui: bool, n_eps: int, iters: int, delta: fl
 
     for grid in grid_paths:  # not yet used, because Q-learning per grid world
         
+        grid_ = Grid.load_grid(grid)
+        
         # Initialize agent
         agent = QLearningAgent()
+        max_diff_list = []  # For tracking convergence and convergence plot
 
         for episode in range(n_eps):
 
             agent._count_increase()
 
             if episode == 0:
-                no_gui = False
+                no_gui = True
             elif (episode % 100 == 0) and (episode != 0):
                 agent._dynamic_params()
                 print(episode)
-                no_gui = False
+                no_gui = True
             else:
                 print(episode)
                 no_gui = True
@@ -74,7 +79,10 @@ def main(grid_paths: list[Path], no_gui: bool, n_eps: int, iters: int, delta: fl
             env = Environment(grid, no_gui,sigma=sigma, target_fps=fps, 
                             random_seed=random_seed)
             
-            q_table_old = agent.q_table.copy()
+            q_table_old = {
+                state: values.copy()   # if `values` is a NumPy array; or list(values) if it’s a list
+                for state, values in agent.q_table.items()
+            }
             
             # Always reset the environment to initial state
             state = env.reset()
@@ -101,14 +109,22 @@ def main(grid_paths: list[Path], no_gui: bool, n_eps: int, iters: int, delta: fl
                 abs_diff = np.max((np.abs(agent.q_table[key] - q_table_old[key])))
                 if abs_diff > max_diff:
                     max_diff = abs_diff
-
-            # Evaluate the agent
-            Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
-
+            if len(all_in_common_keys) == 0:
+                max_diff = 1 # np.inf
+            
+            max_diff_list.append(max_diff_list)
+            print(max_diff)
             # Stopping criterion
             if max_diff < delta:
                 break
 
+        print(len(max_diff_list))
+
+        # Evaluate the agent
+        Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
+    
+        agent.plot_q((grid_.n_rows, grid_.n_cols))
+        # plot_max_diff(max_diff_list)
 
 if __name__ == '__main__':
     args = parse_args()
