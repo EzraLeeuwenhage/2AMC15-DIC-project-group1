@@ -112,7 +112,7 @@ def main(grid_paths: list[Path], no_gui: bool, n_eps: int, iters: int, delta: fl
             if len(all_in_common_keys) == 0:
                 max_diff = 1 # np.inf
             
-            max_diff_list.append(max_diff_list)
+            max_diff_list.append(max_diff)
             print(max_diff)
             # Stopping criterion
             if max_diff < delta:
@@ -124,7 +124,7 @@ def main(grid_paths: list[Path], no_gui: bool, n_eps: int, iters: int, delta: fl
         Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
     
         agent.plot_q((grid_.n_rows, grid_.n_cols))
-        # plot_max_diff(max_diff_list)
+        plot_max_diff(max_diff_list)
 
 if __name__ == '__main__':
     args = parse_args()

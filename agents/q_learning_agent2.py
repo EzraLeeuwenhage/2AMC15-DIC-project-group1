@@ -89,8 +89,8 @@ class QLearningAgent(BaseAgent):
                     linewidths=0.5,
                     linecolor='gray',
                     square=True,
-                    cmap="viridis")      # ← just change this
-                    # cmap="Greys")
+                    # cmap="viridis")      # ← just change this
+                    cmap="Greys")
 
         plt.title("Best Action per State (as Arrows)")
         plt.xlabel("x")

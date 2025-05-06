@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-plt.ion()
 
 
 # Plotting the max_diffs over time to track convergence
@@ -15,12 +14,10 @@ def plot_max_diff(max_diff_list):
     """
     episodes = range(len(max_diff_list))
     plt.figure(figsize=(8, 4))
-    plt.plot(episodes, max_diff_list, marker='o', linestyle='-')
+    plt.plot(episodes, max_diff_list, linestyle='-', linewidth=1)  # thin line, no markers
     plt.xlabel('Episode')
     plt.ylabel('Max Q-value Difference')
     plt.title('Convergence: Max Difference per Episode')
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-    # plt.savefig("max_diff_plot.png")
-    # plt.close()
