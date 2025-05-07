@@ -70,7 +70,7 @@ def main(grid_paths: list[Path], no_gui: bool, n_eps: int, iters: int, delta: fl
             elif (episode % 100 == 0) and (episode != 0):
                 agent._dynamic_params()
                 print(episode)
-                no_gui = True
+                no_gui = False
             else:
                 print(episode)
                 no_gui = True
