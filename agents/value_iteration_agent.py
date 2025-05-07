@@ -22,26 +22,13 @@ class ValueIterationAgent(BaseAgent):
         self.optimal_policy = []
 
 
-        ### dynamic programming: VI/ PI -> assume model of environment: transition probability matrix uit env krijgen
-        # MC + Q learning -> dont assume model, use environment to get statistical idea of true probabilities and iterate on that
-
-        # P(new_state | state + action), state = [links midden rechts] ik zit in links actions = [links rechts]
-        # P(s' | (s, a))
-
-        # matrix for action rechts
-        # links: [0, 1, 0] - dit moet altijd naar 1 summen
-        # midden: [0, 0, 1]
-        # rechts: [0, 0, 1]
-
-        # matrix for action links
-        # bellmann equation: R + future rewards * chance of reaching them -> final value for ecery state
-        # policy is dan het kiezen van de hoogste values
-
     def take_action(self, state: tuple[int, int]) -> int:
         return self.policy[state]
 
+
     def update(self, state: tuple[int, int], reward: float, action: int):
         pass
+
 
     def extract_transition_model(self, grid, sigma):
         """Builds a transition model for each state and action.
@@ -61,7 +48,7 @@ class ValueIterationAgent(BaseAgent):
             3: (1, 0)    # right
         }
 
-        direction_list = list(directions.values())  # [(0,1), (0,-1), (-1,0), (1,0)]
+        direction_list = list(directions.values())
         valid_values = {0, 3, 4}
         n_rows, n_cols = grid.shape
 
@@ -76,6 +63,12 @@ class ValueIterationAgent(BaseAgent):
                 state = (x, y)
                 states.append(state)
                 P[state] = []
+
+                # Terminal state, loops to itself with prob 1 for all actions
+                if grid[x, y] == 3:
+                    for _ in range(4):
+                        P[state].append([(state, 1.0)])
+                    continue
 
                 for action_index, (dx, dy) in directions.items():
                     intended_next_state = (x + dx, y + dy)
@@ -112,7 +105,11 @@ class ValueIterationAgent(BaseAgent):
                     value = 0
 
                     for intended_next_state, prob in P[state][action]:
-                        reward = reward_fn(grid, intended_next_state)
+                        # handle case where current state is target state, don't give reward
+                        if grid[state[0], state[1]] == 3:
+                            reward = 0
+                        else:
+                            reward = reward_fn(grid, intended_next_state)
                         
                         # handle case where 'intended' next_state is illegal state
                         if grid[intended_next_state] in {1, 2}:  
@@ -141,7 +138,11 @@ class ValueIterationAgent(BaseAgent):
             for action in range(self.n_actions):
                 value = 0
                 for intended_next_state, prob in P[state][action]:
-                    reward = reward_fn(grid, intended_next_state)
+                    # handle case where current state is target state, don't give reward
+                    if grid[state[0], state[1]] == 3:
+                        reward = 0
+                    else:
+                        reward = reward_fn(grid, intended_next_state)
 
                     # handle case where 'intended' next_state is illegal state
                     if grid[intended_next_state] in {1, 2}:  
@@ -187,6 +188,7 @@ class ValueIterationAgent(BaseAgent):
         plt.ylabel("y")
         plt.tight_layout()
         plt.show()
+
 
     def plot_V(self):
         """Plot convergence (max delta V over states per step)."""

@@ -54,30 +54,33 @@ def main(grid_paths: list[Path], no_gui: bool, fps: int,
         reward_fn = env.reward_fn
 
         agent = ValueIterationAgent(n_actions=4)
-        states, P = agent.extract_transition_model(grid, env.sigma)
+        # states, P = agent.extract_transition_model(grid, env.sigma)
 
-        # # Print the transition probabilities
+        # value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
+
+        # Print the transition probabilities
         # for state, actions in P.items():
         #     print(f"{state}:")
         #     for action, tuples in enumerate(actions):
         #         print(f"Action {action}: {tuples}")
 
-        # # Print the grid
-        # for row in initial_grid:
-        #     print(row)
+        # Print the grid
+        for row in grid:
+            print(row)
 
-        value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
+        # print(value_function)
+        # print(optimal_policy)
 
-        Environment.evaluate_agent(
-            env.grid_fp, 
-            agent,
-            max_steps=eval_steps,
-            sigma=sigma,
-            random_seed=random_seed
-        )
+        # Environment.evaluate_agent(
+        #     env.grid_fp, 
+        #     agent,
+        #     max_steps=eval_steps,
+        #     sigma=sigma,
+        #     random_seed=random_seed
+        # )
         
-        agent.plot_policy((grid.shape[0], grid.shape[1]))
-        agent.plot_V()
+        # agent.plot_policy((grid.shape[0], grid.shape[1]))
+        # agent.plot_V()
 
 
 if __name__ == '__main__':
