@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug train_DP.py",
+        "type": "python",
+        "request": "launch",
+        "program": "C:/Users/timov/Documents/Study DS&AI/Data Intelligence Challenge 2AMC15/2AMC15-DIC-project-group1/train_DP.py",
+        "args": [
+          "grid_configs/A1_grid.npy",
+          "--no_gui"
+        ],
+        "console": "integratedTerminal"
+      }
+    ]
+  }
+  

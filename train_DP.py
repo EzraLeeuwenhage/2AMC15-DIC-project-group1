@@ -54,7 +54,7 @@ def main(grid_paths: list[Path], no_gui: bool, iters: int, fps: int,
 
         agent = ValueIterationAgent(n_actions=4)
         probs = agent.extract_transition_model(initial_grid)
-        value_function, optimal_policy = agent.value_iteration()
+        value_function, optimal_policy = agent.value_iteration(probs)
         
         for state, values in probs.items():
             print(f"{state}: {values}")
