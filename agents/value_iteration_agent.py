@@ -134,9 +134,16 @@ class ValueIterationAgent(BaseAgent):
 
             for action in range(self.n_actions):
                 value = 0
-                for next_state, prob in P[state][action]:
-                    reward = reward_fn(grid, next_state)
-                    value += prob * (reward + self.gamma * self.V[next_state])
+                for intended_next_state, prob in P[state][action]:
+                    reward = reward_fn(grid, intended_next_state)
+
+                    # handle case where 'intended' next_state is illegal state
+                    if grid[intended_next_state] in {1, 2}:  
+                        actual_next_state = state
+                    else:
+                        actual_next_state = intended_next_state
+
+                    value += prob * (reward + self.gamma * self.V[actual_next_state])
 
                 if value > best_value:
                     best_value = value

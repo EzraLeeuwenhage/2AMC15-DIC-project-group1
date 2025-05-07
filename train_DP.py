@@ -29,18 +29,22 @@ def parse_args():
                         "one.")
     p.add_argument("--no_gui", action="store_true",
                    help="Disables rendering to train faster")
-    p.add_argument("--sigma", type=float, default=0.1,
+    p.add_argument("--sigma", type=float, default=0,
                    help="Sigma value for the stochasticity of the environment.")
     p.add_argument("--fps", type=int, default=30,
                    help="Frames per second to render at. Only used if "
                         "no_gui is not set.")
     p.add_argument("--random_seed", type=int, default=0,
                    help="Random seed value for the environment.")
+    p.add_argument("--eval_steps", type=int,   default=200,
+                   help="Steps for final evaluation.")
+    p.add_argument("--gui_percentage", type=int, default=40,
+                   help="percetage of GUI onnn of episodes to enable GUI (e.g., every N episodes).")
     return p.parse_args()
 
 
 def main(grid_paths: list[Path], no_gui: bool, fps: int,
-         sigma: float, random_seed: int):
+         sigma: float, random_seed: int, eval_steps: int, gui_percentage: int):
     """Main loop of the program."""
 
     for grid in grid_paths:
@@ -53,19 +57,28 @@ def main(grid_paths: list[Path], no_gui: bool, fps: int,
 
         agent = ValueIterationAgent(n_actions=4)
         states, P = agent.extract_transition_model(grid)
-        value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
-        
-        print(value_function)
-        print(optimal_policy)
+
+        # # Print the transition probabilities
         # for state, actions in P.items():
         #     print(f"{state}:")
         #     for action, tuples in enumerate(actions):
         #         print(f"Action {action}: {tuples}")
 
+        # # Print the grid
         # for row in initial_grid:
         #     print(row)
+        
+        value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
+
+        Environment.evaluate_agent(grid, agent,
+            max_steps=eval_steps,
+            sigma=sigma,
+            random_seed=random_seed
+        )
+        
+        agent.plot_policy((grid.shape[0], grid.shape[1]))
 
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args.GRID, args.no_gui, args.fps, args.sigma, args.random_seed)
+    main(args.GRID, args.no_gui, args.fps, args.sigma, args.random_seed, args.eval_steps, args.gui_percentage)
