@@ -29,7 +29,7 @@ def parse_args():
                         "one.")
     p.add_argument("--no_gui", action="store_true",
                    help="Disables rendering to train faster")
-    p.add_argument("--sigma", type=float, default=0,
+    p.add_argument("--sigma", type=float, default=0.1,
                    help="Sigma value for the stochasticity of the environment.")
     p.add_argument("--fps", type=int, default=30,
                    help="Frames per second to render at. Only used if "
@@ -38,25 +38,23 @@ def parse_args():
                    help="Random seed value for the environment.")
     p.add_argument("--eval_steps", type=int,   default=200,
                    help="Steps for final evaluation.")
-    p.add_argument("--gui_percentage", type=int, default=40,
-                   help="percetage of GUI onnn of episodes to enable GUI (e.g., every N episodes).")
     return p.parse_args()
 
 
 def main(grid_paths: list[Path], no_gui: bool, fps: int,
-         sigma: float, random_seed: int, eval_steps: int, gui_percentage: int):
+         sigma: float, random_seed: int, eval_steps: int):
     """Main loop of the program."""
 
     for grid in grid_paths:
         env = Environment(grid, no_gui,sigma=sigma, target_fps=fps, 
                           random_seed=random_seed, agent_start_pos=(1,1))
         
-        state = env.reset()
+        _ = env.reset()
         grid = np.copy(env.grid)
         reward_fn = env.reward_fn
 
         agent = ValueIterationAgent(n_actions=4)
-        states, P = agent.extract_transition_model(grid)
+        states, P = agent.extract_transition_model(grid, env.sigma)
 
         # # Print the transition probabilities
         # for state, actions in P.items():
@@ -79,8 +77,9 @@ def main(grid_paths: list[Path], no_gui: bool, fps: int,
         )
         
         agent.plot_policy((grid.shape[0], grid.shape[1]))
+        agent.plot_V()
 
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args.GRID, args.no_gui, args.fps, args.sigma, args.random_seed, args.eval_steps, args.gui_percentage)
+    main(args.GRID, args.no_gui, args.fps, args.sigma, args.random_seed, args.eval_steps)
