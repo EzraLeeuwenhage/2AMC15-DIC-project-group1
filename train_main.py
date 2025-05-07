@@ -68,7 +68,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
     """Main loop of the program."""
 
     for grid in grid_paths:  # not yet used, because Q-learning per grid world
-        
+
         max_diff_list = []  # For tracking convergence and convergence plot
         env = Environment(grid, no_gui, sigma=sigma, target_fps=fps,
                           random_seed=random_seed)

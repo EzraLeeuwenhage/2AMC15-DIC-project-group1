@@ -69,4 +69,7 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
     #TODO: this stopping criterion only works if the agent starts from the same place each episode.
     # This is because if on a path that is seen before the max diff is very small
     # However this does not mean it learned all paths correctly
+    # furthermore, the max diff plot makes more sense when start position is always the same
+    # if start position is different each time the max diff plot becomes less insightful
+    
     return agent, max_diff_list, False
