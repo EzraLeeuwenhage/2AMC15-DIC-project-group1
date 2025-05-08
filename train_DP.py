@@ -53,34 +53,34 @@ def main(grid_paths: list[Path], no_gui: bool, fps: int,
         grid = np.copy(env.grid)
         reward_fn = env.reward_fn
 
-        agent = ValueIterationAgent(n_actions=4)
-        # states, P = agent.extract_transition_model(grid, env.sigma)
+        agent = ValueIterationAgent(n_actions=4, gamma=0.9, delta_threshold=1e-6)
+        states, P = agent.extract_transition_model(grid, env.sigma)
 
-        # value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
+        value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
 
-        # Print the transition probabilities
+        # # Print the transition probabilities
         # for state, actions in P.items():
         #     print(f"{state}:")
         #     for action, tuples in enumerate(actions):
         #         print(f"Action {action}: {tuples}")
 
-        # Print the grid
-        for row in grid:
-            print(row)
+        # # Print the grid
+        # for row in grid.T:
+        #     print(row)
 
         # print(value_function)
         # print(optimal_policy)
 
-        # Environment.evaluate_agent(
-        #     env.grid_fp, 
-        #     agent,
-        #     max_steps=eval_steps,
-        #     sigma=sigma,
-        #     random_seed=random_seed
-        # )
+        Environment.evaluate_agent(
+            env.grid_fp, 
+            agent,
+            max_steps=eval_steps,
+            sigma=sigma,
+            random_seed=random_seed
+        )
         
-        # agent.plot_policy((grid.shape[0], grid.shape[1]))
-        # agent.plot_V()
+        agent.plot_policy((grid.shape[0], grid.shape[1]))
+        agent.plot_V()
 
 
 if __name__ == '__main__':
