@@ -1,4 +1,4 @@
-from agents.q_learning_agent2 import QLearningAgent
+from agents.q_learning_agent import QLearningAgent
 from argparse import ArgumentParser
 from pathlib import Path
 from tqdm import trange
@@ -24,8 +24,6 @@ except ModuleNotFoundError:
 
 def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
     """Main loop of the program."""
-
-    agent._count_increase()
 
     if (episode % 100 == 0) and (episode != 0):
         agent._dynamic_params()
@@ -63,13 +61,13 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
 
     max_diff_list.append(max_diff)
     print(max_diff)
-    # Stopping criterion
+
+    # Stopping criterion --> no significant change for N=20 episodes in a row.
     if max_diff < delta:
-        return agent, max_diff_list, True
-    #TODO: this stopping criterion only works if the agent starts from the same place each episode.
-    # This is because if on a path that is seen before the max diff is very small
-    # However this does not mean it learned all paths correctly
-    # furthermore, the max diff plot makes more sense when start position is always the same
-    # if start position is different each time the max diff plot becomes less insightful
+        agent._closer_to_termination()
+        if agent.nr_consecutive_eps_no_change >= 20:
+            return agent, max_diff_list, True
+    else:
+        agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
     
     return agent, max_diff_list, False

@@ -2,7 +2,7 @@
 Train your RL Agent in this file. 
 """
 
-from agents.q_learning_agent2 import QLearningAgent
+from agents.q_learning_agent import QLearningAgent
 from agents.monte_carlo_agent import MonteCarloAgent
 from argparse import ArgumentParser
 from pathlib import Path
@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_max_diff
+from utils.plots import plot_max_diff, plot_policy_heatmap
 from train_q_learning_logic import train_q_learning
 from train_mc_logic import train_mc2
 try:
@@ -72,10 +72,11 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
         max_diff_list = []  # For tracking convergence and convergence plot
         env = Environment(grid, no_gui, sigma=sigma, target_fps=fps,
                           random_seed=random_seed)
+        grid_ = Grid.load_grid(grid)
 
         if algorithm=='q_learning':
             # Initialize agent
-            agent = QLearningAgent()
+            agent = QLearningAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
         if algorithm == 'mc':
             agent = MonteCarloAgent(n_actions=4,
                                     epsilon=epsilon,
@@ -104,6 +105,8 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
         # Evaluate the agent
         Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
         plot_max_diff(max_diff_list)
+        if algorithm=='q_learning':  # TODO: Make sure that this works for the other algorithm. I standardized the plotting function it can be found in utils/plots.py
+            plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
 if __name__ == '__main__':
     args = parse_args()

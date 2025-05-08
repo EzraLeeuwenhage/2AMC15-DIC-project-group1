@@ -1,4 +1,7 @@
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle, Circle
+import numpy as np
 
 
 # Plotting the max_diffs over time to track convergence
@@ -19,5 +22,83 @@ def plot_max_diff(max_diff_list):
     plt.ylabel('Max Q-value Difference')
     plt.title('Convergence: Max Difference per Episode')
     plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# Plotting the visit heatmap with policy
+
+def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: np.ndarray):
+    """
+    Plots a heatmap of visit frequencies (viridis), marks obstacles in dark grey,
+    and overlays arrows for the optimal action in each visited state.
+
+    Args:
+        layout_matrix (2D array of ints): different integers indicate different entities.
+        "empty": 0,
+        "boundary": 1,
+        "obstacle": 2,
+        "target": 3,
+        "charger": 4
+    """
+    layout_matrix = np.rot90(layout_matrix)
+    visits = np.rot90(visit_counts)
+    nrows, ncols = visits.shape
+
+    fig, ax = plt.subplots()
+    # Heatmap of visits
+    img = ax.imshow(visits, cmap='viridis', origin='lower', interpolation='nearest')
+    fig.colorbar(img, ax=ax, label='Visit Count')
+
+    # Overlay obstacle cells
+    for i in range(nrows):
+        for j in range(ncols):
+            if layout_matrix[i, j] in [1, 2]:  # grey color for borders and obstacles
+                rect = Rectangle((j - 0.5, i - 0.5), 1, 1, color='lightgray')
+                ax.add_patch(rect)
+
+    # Overlay targets --> potentially add one for chargers later
+    for i in range(nrows):
+        for j in range(ncols):
+            if layout_matrix[i, j] in [3]: 
+                circle = Circle(xy=(j, i), radius=0.3, color='#92e000')  
+                # add green circle for target, but at same time color in background to see how often it was reached
+                ax.add_patch(circle)
+
+    grid = np.full((nrows, ncols), ' ', dtype=object)
+    arrow_map = {0: '↓', 1: '↑', 2: '←', 3: '→'}
+
+    # Find best action per state
+    best_actions = {}
+    for state in q_table:
+        best_action = np.argmax(q_table[state])
+        best_actions[state] = (best_action, q_table[state][best_action])
+    
+    # Fill in arrows only where we have data
+    for (x, y), (action, _) in best_actions.items():
+
+        if 0 <= x < ncols and 0 <= y < nrows:  # Ensure within bounds
+            grid[y, x] = arrow_map.get(action, '?')
+
+    grid = np.rot90(grid.transpose())  
+    # In the figure the bottom left is (0,0) coordinate, but in the numpy array the top left is (0,0), therefore this transformation is necessary
+
+    for (r, c), label in np.ndenumerate(grid):
+        if label != ' ':          # only draw non‐blank cells
+            ax.text(
+                c,               
+                r,               
+                label,            
+                ha='center', 
+                va='center',
+                color='white',    
+                fontsize=12
+            )
+
+    # Remove axes labels and ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
     plt.tight_layout()
     plt.show()

@@ -17,32 +17,46 @@ class QLearningAgent(BaseAgent):
         - 3: Move right
     """
 
-    def __init__(self, actions = [0, 1, 2, 3], alpha=0.1, gamma=0.9, epsilon=0.5):
+    def __init__(self, grid_shape, actions = [0, 1, 2, 3], alpha=0.1, gamma=0.9, epsilon=0.5):
         super().__init__()
         self.q_table = {}  # Layout of Q_table is this dictionary structure: {(state): [action_values]}
         self.actions = actions
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
-        self.episode_count = 0
+        self.nr_consecutive_eps_no_change = 0  # only used for stopping criterion
+        self.visit_counts = np.zeros(grid_shape, dtype=int)  # Only used for plotting, does not break Markov Property
 
-    def _count_increase(self):
-        self.episode_count += 1
+    def _closer_to_termination(self):
+        """Keep track in how many consecutive episodes the Q-values did not change significantly. I.e. max_diff of Q-values below some delta."""
+        self.nr_consecutive_eps_no_change += 1
+
+    def _significant_change_to_q_values(self):
+        """If Q-values did change significantly, we need to reset the maintained number of consecutive episodes without change."""
+        self.nr_consecutive_eps_no_change = 0
 
     def _dynamic_params(self):
+        """Halve the exploration rate"""
         self.epsilon /= 2
 
     def _ensure_state_exists(self, state):
+        """If state does not exist (is not in the dictionary) yet, create an entry for this state initializing the Q-value for all actions at 0."""
         if state not in self.q_table:
-            self.q_table[state] = [0.0 for _ in self.actions]
+            self.q_table[state] = np.array([0.0 for _ in self.actions])
 
     def take_action(self, state: tuple[int, int]) -> int:
+        """Choose some action using epsilon greedy, and before an action is chosen we record the visit to a state."""
         self._ensure_state_exists(state)
+        # Record visit of being in a state when taking an action from that state
+        r, c = state
+        self.visit_counts[r, c] += 1
+        # Epsilon-greedy
         if np.random.rand() < self.epsilon:
             return np.random.choice(self.actions)  # explore
         return int(np.argmax(self.q_table[state]))  # exploit
 
     def update(self, state: tuple[int, int], reward: float, action: int, next_state: tuple[int, int]):
+        """Execute update to the Q-values, following the Bellman Equation."""
         self._ensure_state_exists(state)
         self._ensure_state_exists(next_state)
         best_next_q = max(self.q_table[next_state])
