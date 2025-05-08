@@ -45,20 +45,25 @@ def main(grid_paths: list[Path], no_gui: bool, fps: int,
 
     for grid in grid_paths:
         env = Environment(grid, no_gui,sigma=sigma, target_fps=fps, 
-                          random_seed=random_seed)
+                          random_seed=random_seed, agent_start_pos=(1,1))
         
         state = env.reset()
-        initial_grid = np.copy(env.grid)
+        grid = np.copy(env.grid)
+        reward_fn = env.reward_fn
 
         agent = ValueIterationAgent(n_actions=4)
-        probs = agent.extract_transition_model(initial_grid)
-        # value_function, optimal_policy = agent.value_iteration()
+        states, P = agent.extract_transition_model(grid)
+        value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
         
-        for state, values in probs.items():
-            print(f"{state}: {values}")
+        print(value_function)
+        print(optimal_policy)
+        # for state, actions in P.items():
+        #     print(f"{state}:")
+        #     for action, tuples in enumerate(actions):
+        #         print(f"Action {action}: {tuples}")
 
-        for row in initial_grid:
-            print(row)
+        # for row in initial_grid:
+        #     print(row)
 
 
 if __name__ == '__main__':

@@ -18,7 +18,7 @@ class ValueIterationAgent(BaseAgent):
         self.delta_threshold = delta_threshold
         self.V = defaultdict(float)
         self.policy = {} 
-        self.delta_history = [] # per step maximum change over all state values
+        # self.delta_history = [] # per step maximum change over all state values
         self.optimal_policy = []
 
 
@@ -38,21 +38,21 @@ class ValueIterationAgent(BaseAgent):
         # policy is dan het kiezen van de hoogste values
 
     def take_action(self, state: tuple[int, int]) -> int:
-        # given state -> do action according to learned optimal policy
-        pass
+        return self.policy[state]
 
     def update(self, state: tuple[int, int], reward: float, action: int):
         pass
 
     def extract_transition_model(self, grid):
-        """Builds a full transition model for every state and action.
+        """Builds a transition model for each state and action.
 
-        Each state has 4 actions, and each action lists 4 possible next states
-        (up, down, left, right) with their respective probabilities.
+        Each action results in one intended next state (prob=1.0) and
+        three other adjacent states (prob=0.0) for easy future stochastic updates.
 
         Returns:
-            dict[state] = [list of 4 lists], where each inner list contains up to 4
-            (next_state, probability) tuples for that action.
+            states: List of valid states.
+            P: dict[state] = list of 4 lists (one per action), each containing 4 tuples
+            (next_state, prob) representing the 4 adjacent positions.
         """
         directions = {
             0: (0, 1),   # down
@@ -60,49 +60,92 @@ class ValueIterationAgent(BaseAgent):
             2: (-1, 0),  # left
             3: (1, 0)    # right
         }
-        direction_list = [(0, 1), (0, -1), (-1, 0), (1, 0)]  # for generating all possible next states
 
+        direction_list = list(directions.values())  # [(0,1), (0,-1), (-1,0), (1,0)]
         valid_values = {0, 3, 4}
         n_rows, n_cols = grid.shape
 
+        states = []
         P = {}
 
-        for x in range(n_cols):
-            for y in range(n_rows):
-                if grid[y, x] not in valid_values:
-                    continue  # skip unreachable states
+        for x in range(n_rows):
+            for y in range(n_cols):
+                if grid[x, y] not in valid_values:
+                    continue
 
                 state = (x, y)
+                states.append(state)
                 P[state] = []
 
-                for action in range(4):
-                    dx, dy = directions[action]
-                    ax, ay = x + dx, y + dy
-
-                    if 0 <= ax < n_cols and 0 <= ay < n_rows and grid[ay, ax] in valid_values:
-                        intended_next_state = (ax, ay)
-                    else:
-                        intended_next_state = (x, y)  # bump, stay
+                for action_index, (dx, dy) in directions.items():
+                    intended = (x + dx, y + dy)
 
                     action_transitions = []
                     for ndx, ndy in direction_list:
                         nx, ny = x + ndx, y + ndy
-                        if 0 <= nx < n_cols and 0 <= ny < n_rows and grid[ny, nx] in valid_values:
-                            neighbor = (nx, ny)
-                        else:
-                            neighbor = (x, y)
-
-                        if neighbor == intended_next_state:
-                            action_transitions.append((neighbor, 1.0))
-                        else:
-                            action_transitions.append((neighbor, 0.0))
+                        next_state = (nx, ny)
+                        prob = 1.0 if next_state == intended else 0.0
+                        action_transitions.append((next_state, prob))
 
                     P[state].append(action_transitions)
 
-        return P
+        return states, P
 
-    def value_iteration():
-        pass
+
+    def value_iteration(self, grid, reward_fn, states, P, max_iterations=1000):
+        """Performs Value Iteration given transition model and reward function."""
+        self.V = {state: 0 for state in states}
+        
+        for i in range(max_iterations):
+            delta = 0
+            new_V = self.V.copy()
+
+            for state in states:
+                action_values = []
+
+                for action in range(self.n_actions):
+                    value = 0
+
+                    for intended_next_state, prob in P[state][action]:
+                        reward = reward_fn(grid, intended_next_state)
+                        
+                        # handle case where 'intended' next_state is illegal state
+                        if grid[intended_next_state] in {1, 2}:  
+                            actual_next_state = state
+                        else:
+                            actual_next_state = intended_next_state
+    
+                        value += prob * (reward + self.gamma * self.V[actual_next_state])
+
+                    action_values.append(value)
+
+                new_V[state] = max(action_values)
+                delta = max(delta, abs(self.V[state] - new_V[state]))
+
+            self.V = new_V
+            if delta < self.delta_threshold:
+                break
+
+        # Get optimal policy
+        self.policy = {}
+        for state in states:
+            best_action = None
+            best_value = float('-inf')
+
+            for action in range(self.n_actions):
+                value = 0
+                for next_state, prob in P[state][action]:
+                    reward = reward_fn(grid, next_state)
+                    value += prob * (reward + self.gamma * self.V[next_state])
+
+                if value > best_value:
+                    best_value = value
+                    best_action = action
+
+            self.policy[state] = best_action
+        
+        return self.V, self.policy
+
 
     def plot_policy(self, grid_shape=(8, 8)):
         """ Plot a 2D heatmap showing the best action for each state (x, y) using arrows.
