@@ -34,14 +34,12 @@ def parse_args():
     p.add_argument("--fps", type=int, default=30,
                    help="Frames per second to render at. Only used if "
                         "no_gui is not set.")
-    p.add_argument("--iter", type=int, default=1000,
-                   help="Number of iterations to go through.")
     p.add_argument("--random_seed", type=int, default=0,
                    help="Random seed value for the environment.")
     return p.parse_args()
 
 
-def main(grid_paths: list[Path], no_gui: bool, iters: int, fps: int,
+def main(grid_paths: list[Path], no_gui: bool, fps: int,
          sigma: float, random_seed: int):
     """Main loop of the program."""
 
@@ -54,7 +52,7 @@ def main(grid_paths: list[Path], no_gui: bool, iters: int, fps: int,
 
         agent = ValueIterationAgent(n_actions=4)
         probs = agent.extract_transition_model(initial_grid)
-        value_function, optimal_policy = agent.value_iteration()
+        # value_function, optimal_policy = agent.value_iteration()
         
         for state, values in probs.items():
             print(f"{state}: {values}")
@@ -65,4 +63,4 @@ def main(grid_paths: list[Path], no_gui: bool, iters: int, fps: int,
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args.GRID, args.no_gui, args.iter, args.fps, args.sigma, args.random_seed)
+    main(args.GRID, args.no_gui, args.fps, args.sigma, args.random_seed)
