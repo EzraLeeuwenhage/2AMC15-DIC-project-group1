@@ -67,10 +67,12 @@ def main(grid_paths: list[Path], no_gui: bool, fps: int,
         # # Print the grid
         # for row in initial_grid:
         #     print(row)
-        
+
         value_function, optimal_policy = agent.value_iteration(grid, reward_fn, states, P)
 
-        Environment.evaluate_agent(grid, agent,
+        Environment.evaluate_agent(
+            env.grid_fp, 
+            agent,
             max_steps=eval_steps,
             sigma=sigma,
             random_seed=random_seed
