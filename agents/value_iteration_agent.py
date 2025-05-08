@@ -19,11 +19,63 @@ class ValueIterationAgent(BaseAgent):
         self.V = defaultdict(float)
         self.policy = {} 
         self.delta_history = [] # per step maximum change over all state values
+        self.optimal_policy = []
+
+
+        ### dynamic programming: VI/ PI -> assume model of environment: transition probability matrix uit env krijgen
+        # MC + Q learning -> dont assume model, use environment to get statistical idea of true probabilities and iterate on that
+
+        # P(new_state | state + action), state = [links midden rechts] ik zit in links actions = [links rechts]
+        # P(s' | (s, a))
+
+        # matrix for action rechts
+        # links: [0, 1, 0] - dit moet altijd naar 1 summen
+        # midden: [0, 0, 1]
+        # rechts: [0, 0, 1]
+
+        # matrix for action links
+        # bellmann equation: R + future rewards * chance of reaching them -> final value for ecery state
+        # policy is dan het kiezen van de hoogste values
 
     def take_action(self, state: tuple[int, int]) -> int:
+        # given state -> do action according to learned optimal policy
         pass
 
     def update(self, state: tuple[int, int], reward: float, action: int):
+        pass
+
+    def extract_transition_model(self, grid):
+        """Builds the transition model based on the provided grid."""
+        P = defaultdict(lambda: defaultdict(dict))
+        directions = {
+            0: (0, 1),   # down
+            1: (0, -1),  # up
+            2: (-1, 0),  # left
+            3: (1, 0)    # right
+        }
+        valid_values = {0, 3, 4}
+        n_rows, n_cols = grid.shape
+        
+        for x in range(n_cols):
+            for y in range(n_rows):
+                if grid[y, x] not in valid_values:
+                    continue  # skip obstacles and walls
+
+                state = (x, y)
+
+                for action, (dx, dy) in directions.items():
+                    nx, ny = x + dx, y + dy
+
+                    if 0 <= nx < n_cols and 0 <= ny < n_rows and grid[ny, nx] in valid_values:
+                        next_state = (nx, ny)
+                    else:
+                        next_state = (x, y)  # bump into wall/obstacle, stay in place
+
+                    # Deterministic transition: only one possible outcome with prob 1
+                    P[state][action] = [(next_state, 1.0)]
+        return P
+
+    def value_iteration():
         pass
 
     def plot_policy(self, grid_shape=(8, 8)):
