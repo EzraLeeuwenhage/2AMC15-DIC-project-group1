@@ -18,7 +18,7 @@ class ValueIterationAgent(BaseAgent):
         self.delta_threshold = delta_threshold
         self.V = defaultdict(float)
         self.policy = {} 
-        # self.delta_history = [] # per step maximum change over all state values
+        self.delta_history = [] # per step maximum change over all state values
         self.optimal_policy = []
 
 
@@ -43,7 +43,7 @@ class ValueIterationAgent(BaseAgent):
     def update(self, state: tuple[int, int], reward: float, action: int):
         pass
 
-    def extract_transition_model(self, grid):
+    def extract_transition_model(self, grid, sigma):
         """Builds a transition model for each state and action.
 
         Each action results in one intended next state (prob=1.0) and
@@ -78,20 +78,25 @@ class ValueIterationAgent(BaseAgent):
                 P[state] = []
 
                 for action_index, (dx, dy) in directions.items():
-                    intended = (x + dx, y + dy)
-
+                    intended_next_state = (x + dx, y + dy)
                     action_transitions = []
-                    for ndx, ndy in direction_list:
-                        nx, ny = x + ndx, y + ndy
-                        next_state = (nx, ny)
-                        prob = 1.0 if next_state == intended else 0.0
-                        action_transitions.append((next_state, prob))
 
+                    for direction in direction_list:
+                        new_x, new_y = x + direction[0], y + direction[1]
+                        next_state = (new_x, new_y)
+
+                        if next_state == intended_next_state:
+                            prob = (1 - sigma) + sigma / 4
+                        else:
+                            prob = sigma / 4
+                        
+                        action_transitions.append((next_state, prob))
+                    
                     P[state].append(action_transitions)
 
         return states, P
 
-
+    
     def value_iteration(self, grid, reward_fn, states, P, max_iterations=1000):
         """Performs Value Iteration given transition model and reward function."""
         self.V = {state: 0 for state in states}
@@ -123,6 +128,7 @@ class ValueIterationAgent(BaseAgent):
                 delta = max(delta, abs(self.V[state] - new_V[state]))
 
             self.V = new_V
+            self.delta_history.append(delta)
             if delta < self.delta_threshold:
                 break
 
