@@ -6,7 +6,7 @@ import seaborn as sns
 
 
 class ValueIterationAgent(BaseAgent):
-    def __init__(self, n_actions: int, gamma: float = 0.9, delta_threshold: float = 1e-4):
+    def __init__(self, n_actions: int, gamma: float, delta_threshold: float):
         """Value Iteration Agent.
         Args:
             n_actions: Number of possible actions.
@@ -50,13 +50,13 @@ class ValueIterationAgent(BaseAgent):
 
         direction_list = list(directions.values())
         valid_values = {0, 3, 4}
-        n_rows, n_cols = grid.shape
+        n_cols, n_rows = grid.shape
 
         states = []
         P = {}
 
-        for x in range(n_rows):
-            for y in range(n_cols):
+        for x in range(n_cols):
+            for y in range(n_rows):
                 if grid[x, y] not in valid_values:
                     continue
 
@@ -65,7 +65,7 @@ class ValueIterationAgent(BaseAgent):
                 P[state] = []
 
                 # Terminal state, loops to itself with prob 1 for all actions
-                if grid[x, y] == 3:
+                if grid[state] == 3:
                     for _ in range(4):
                         P[state].append([(state, 1.0)])
                     continue
@@ -89,7 +89,7 @@ class ValueIterationAgent(BaseAgent):
 
         return states, P
 
-    
+
     def value_iteration(self, grid, reward_fn, states, P, max_iterations=1000):
         """Performs Value Iteration given transition model and reward function."""
         self.V = {state: 0 for state in states}
@@ -106,7 +106,7 @@ class ValueIterationAgent(BaseAgent):
 
                     for intended_next_state, prob in P[state][action]:
                         # handle case where current state is target state, don't give reward
-                        if grid[state[0], state[1]] == 3:
+                        if grid[state] == 3:
                             reward = 0
                         else:
                             reward = reward_fn(grid, intended_next_state)
@@ -116,7 +116,7 @@ class ValueIterationAgent(BaseAgent):
                             actual_next_state = state
                         else:
                             actual_next_state = intended_next_state
-    
+
                         value += prob * (reward + self.gamma * self.V[actual_next_state])
 
                     action_values.append(value)
@@ -139,7 +139,7 @@ class ValueIterationAgent(BaseAgent):
                 value = 0
                 for intended_next_state, prob in P[state][action]:
                     # handle case where current state is target state, don't give reward
-                    if grid[state[0], state[1]] == 3:
+                    if grid[state] == 3:
                         reward = 0
                     else:
                         reward = reward_fn(grid, intended_next_state)
