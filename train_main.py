@@ -1,7 +1,7 @@
 """
 Train your RL Agent in this file. 
 """
-
+from agents.value_iteration_agent import ValueIterationAgent
 from agents.q_learning_agent import QLearningAgent
 from agents.monte_carlo_agent import MonteCarloAgent
 from argparse import ArgumentParser
@@ -13,6 +13,7 @@ from world.grid import Grid  # Import the Grid class
 from utils.plots import plot_max_diff, plot_policy_heatmap
 from train_q_learning_logic import train_q_learning
 from train_mc_logic import train_mc2
+from train_DP_logic import train_DP
 try:
     from world import Environment
     from agents.random_agent import RandomAgent
@@ -81,6 +82,8 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             agent = MonteCarloAgent(n_actions=4,
                                     epsilon=epsilon,
                                     gamma=gamma)
+        if algorithm=='dp':
+            agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
 
         for episode in trange(episodes):
             print(episode)
@@ -101,6 +104,10 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
 
             if algorithm == 'mc':
                 agent, max_diff_list = train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episode, max_diff_list)
+
+            if algorithm == 'dp':
+                agent, value_function, optimal_policy, max_diff_list = train_DP(agent, env, max_diff_list)
+                break
 
         # Evaluate the agent
         Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
