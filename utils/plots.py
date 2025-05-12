@@ -6,21 +6,21 @@ import numpy as np
 
 # Plotting the max_diffs over time to track convergence
 
-def plot_max_diff(max_diff_list):
+def plot_time_series(value_list, y_label = '', title=''):
     """
-    Plot the max Q-value difference per episode.
+    Plot value per episode.
 
     Parameters:
     -----------
-    max_diff_list : list of float
-        max_diff_list[i] is the max Q-value change in episode i.
+    value_list : list of float
+        value_list[i] is the value in episode i.
     """
-    episodes = range(len(max_diff_list))
+    episodes = range(len(value_list))
     plt.figure(figsize=(8, 4))
-    plt.plot(episodes, max_diff_list, linestyle='-', linewidth=1)  # thin line, no markers
+    plt.plot(episodes, value_list, linestyle='-', linewidth=1)  # thin line, no markers
     plt.xlabel('Episode')
-    plt.ylabel('Max Q-value Difference')
-    plt.title('Convergence: Max Difference per Episode')
+    plt.ylabel(y_label)
+    plt.title(title)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -36,6 +36,29 @@ def plot_V(agent):
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+def calc_normilized_auc(reward_list):
+    episodes = np.arange(len(reward_list))
+
+    auc = np.trapz(reward_list, episodes)
+
+    min_reward = min(reward_list)
+    max_reward = max(reward_list)
+
+
+    min_auc = min_reward * (len(reward_list) - 1)
+    max_auc = max_reward * (len(reward_list) - 1)
+
+    normalized_auc = (auc - min_auc) / (max_auc - min_auc) if max_auc != min_auc else 0
+
+    return normalized_auc
+
+def calc_auc(reward_list):
+    episodes = np.arange(len(reward_list))
+
+    auc = np.trapz(reward_list, episodes)
+    return auc
+
 
 # Plotting the visit heatmap with policy
 #TODO: this function does not work for all the grids. It does not work for example_grid.npy
@@ -122,3 +145,5 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
     ax.set_ylabel('')
     plt.tight_layout()
     plt.show()
+
+

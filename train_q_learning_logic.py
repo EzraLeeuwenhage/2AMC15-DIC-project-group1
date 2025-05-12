@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_max_diff
+
 
 try:
     from world import Environment
@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     from agents.random_agent import RandomAgent
 
 
-def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
+def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list):
     """Main loop of the program."""
     #print(agent.visit_counts)
     if (episode % 100 == 0) and (episode != 0):
@@ -48,7 +48,7 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
         agent.update(state, reward, info["actual_action"], next_state)
 
         state = next_state
-
+    cumulative_reward_list.append(env.world_stats["cumulative_reward"])
     # max difference in q values
     max_diff = 0
     all_in_common_keys = set(agent.q_table.keys()) & set(q_table_old.keys())
@@ -65,8 +65,8 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
     if max_diff < delta:
         agent._closer_to_termination()
         if agent.nr_consecutive_eps_no_change >= 20:
-            return agent, max_diff_list, True
+            return agent, max_diff_list, cumulative_reward_list, True
     else:
         agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
     
-    return agent, max_diff_list, False
+    return agent, max_diff_list, cumulative_reward_list, False

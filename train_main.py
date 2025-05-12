@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_max_diff, plot_policy_heatmap, plot_V
+from utils.plots import plot_time_series, plot_policy_heatmap, plot_V, calc_auc, calc_normilized_auc
 from train_q_learning_logic import train_q_learning
 from train_mc_logic import train_mc2
 from train_DP_logic import train_DP
@@ -71,6 +71,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
     for grid in grid_paths:  # not yet used, because Q-learning per grid world
 
         max_diff_list = []  # For tracking convergence and convergence plot
+        cumulative_reward_list = []
         env = Environment(grid, no_gui, sigma=sigma, target_fps=fps,
                           random_seed=random_seed)
         grid_ = Grid.load_grid(grid)
@@ -98,7 +99,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             state = env.reset(no_gui=no_gui)
 
             if algorithm=='q_learning':
-                agent, max_diff_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode)
+                agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list)
                 if flag_break:
 
                     break
@@ -115,9 +116,18 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             plot_V(agent)
             visit_counts = (grid_.cells == 3).astype(int)
             plot_policy_heatmap(optimal_policy, visit_counts, grid_.cells)
+
+        elif algorithm=='q_learning':
+            print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
+            print(f'normilized AUC under the learning curve: {calc_normilized_auc(cumulative_reward_list)}')
+            agent.epsilon = 0
+            plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
+            plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
+            plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+
         else:
             agent.epsilon = 0
-            plot_max_diff(max_diff_list)
+            plot_time_series(max_diff_list, 'Convergence: Max Difference per Episode')
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
         Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
