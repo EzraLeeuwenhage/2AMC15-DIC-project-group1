@@ -48,8 +48,8 @@ class QLearningAgent(BaseAgent):
         """Choose some action using epsilon greedy, and before an action is chosen we record the visit to a state."""
         self._ensure_state_exists(state)
         # Record visit of being in a state when taking an action from that state
-        r, c = state
-        self.visit_counts[r, c] += 1
+        c, r = state  # Environment uses the (c, r) indexing which is a bit odd
+        self.visit_counts[r, c] += 1  # We maintain the visit counts in the more usual (r, c) as this is more usual, and better for plotting
         # Epsilon-greedy
         if np.random.rand() < self.epsilon:
             return np.random.choice(self.actions)  # explore

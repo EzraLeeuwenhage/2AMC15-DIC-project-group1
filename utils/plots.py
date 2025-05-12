@@ -59,18 +59,6 @@ def calc_auc(reward_list):
     auc = np.trapz(reward_list, episodes)
     return auc
 
-
-# Plotting the visit heatmap with policy
-#TODO: this function does not work for all the grids. It does not work for example_grid.npy
-# error:
-#  File "C:\Users\20203666\Documents\GitHub\2AMC15-DIC-project-group1\utils\plots.py", line 56, in plot_policy_heatmap
-#     if layout_matrix[i, j] in [1, 2]:  # grey color for borders and obstacles
-#         ~~~~~~~~~~~~~^^^^^^
-# IndexError: index 7 is out of bounds for axis 0 with size 7
-# --
-# the error is happens with grids with diff number rows as cols
-# the cause are the switched around rows and cols in the code of the teachers
-
 def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: np.ndarray):
     """
     Plots a heatmap of visit frequencies (viridis), marks obstacles in dark grey,
@@ -84,13 +72,16 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
         "target": 3,
         "charger": 4
     """
-    layout_matrix = np.rot90(layout_matrix)
-    visits = np.rot90(visit_counts)
-    nrows, ncols = visits.shape
+    # The environment works with (column, row) indexing. The GUI works with (row, column), 
+    # Therefore we convert the (c, r) to (r, c), to make the plot aligned with the GUI visualization
+    layout_matrix = layout_matrix.T
+    # visit_counts is maintained in the more customary (r, c) format immediately to make this plotting easier. Therefore no transposing is necessary
+    # Q-table is indirectly transposed when creating the annotation grid using grid[r, c] indexing
+    nrows, ncols = layout_matrix.shape
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots()  # initiate plot
     # Heatmap of visits
-    img = ax.imshow(visits, cmap='viridis', origin='lower', interpolation='nearest')
+    img = ax.imshow(visit_counts, cmap='viridis', interpolation='nearest', origin='upper')
     fig.colorbar(img, ax=ax, label='Visit Count')
 
     # Overlay obstacle cells
@@ -100,7 +91,7 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
                 rect = Rectangle((j - 0.5, i - 0.5), 1, 1, color='lightgray')
                 ax.add_patch(rect)
 
-    # Overlay targets --> potentially add one for chargers later
+    # Overlay targets --> we can add one for chargers later
     for i in range(nrows):
         for j in range(ncols):
             if layout_matrix[i, j] in [3]:
@@ -116,18 +107,14 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
     for state in q_table:
         best_action = np.argmax(q_table[state])
         best_actions[state] = (best_action, q_table[state][best_action])
-    
+
     # Fill in arrows only where we have data
-    for (x, y), (action, _) in best_actions.items():
-
-        if 0 <= x < ncols and 0 <= y < nrows:  # Ensure within bounds
-            grid[y, x] = arrow_map.get(action, '?')
-
-    grid = np.rot90(grid.transpose())  
-    # In the figure the bottom left is (0,0) coordinate, but in the numpy array the top left is (0,0), therefore this transformation is necessary
+    for (c, r), (action, _) in best_actions.items():
+        if 0 <= c < ncols and 0 <= r < nrows:  # Ensure within bounds
+            grid[r, c] = arrow_map.get(action, '?')  # By indexing with [r, c] we sort of transpose the Q-table values
 
     for (r, c), label in np.ndenumerate(grid):
-        if label != ' ':          # only draw non‐blank cells
+        if label != ' ':  # Only add annotation if there is an arrow
             ax.text(
                 c,               
                 r,               
@@ -145,5 +132,3 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
     ax.set_ylabel('')
     plt.tight_layout()
     plt.show()
-
-
