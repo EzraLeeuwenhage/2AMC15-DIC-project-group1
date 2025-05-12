@@ -33,7 +33,7 @@ class MonteCarloAgent(BaseAgent):
 
     def _dynamic_params(self):
         """Halve the exploration rate"""
-        self.epsilon = max(self.epsilon-0.01, 0.1)
+        self.epsilon = max(self.epsilon-0.05, 0.1)
 
     def _closer_to_termination(self):
         """Keep track in how many consecutive episodes the Q-values did not change significantly. I.e. max_diff of Q-values below some delta."""
@@ -76,7 +76,6 @@ class MonteCarloAgent(BaseAgent):
             """
         T = len(episode)
 
-        # 1. Compute returns G_t for every t, backwards
         returns = [0.0] * T
         G = 0.0
         for t in reversed(range(T)):
@@ -84,26 +83,21 @@ class MonteCarloAgent(BaseAgent):
             G = self.gamma * G + reward
             returns[t] = G
 
-        # 2. First‐visit bookkeeping
         seen = set()
         for t, (state, action, _) in enumerate(episode):
             if (state, action) in seen:
                 continue
             seen.add((state, action))
 
-            # Standard MC updates using the precomputed return
             self._ensure_state_exists_q_table(state)
             self._ensure_state_exists_returns_sum(state)
             self._ensure_state_exists_returns_count(state)
 
             G_t = returns[t]
-            self.returns_sum[state][action]   += G_t
+            self.returns_sum[state][action] += G_t
             self.returns_count[state][action] += 1
-            self.q_table[state][action] = (
-                    self.returns_sum[state][action]
-                    / self.returns_count[state][action]
-            )
-            # (Optional) track overall visit counts
+            self.q_table[state][action] = self.returns_sum[state][action]/ self.returns_count[state][action]
+
             r, c = state
             self.visit_counts[r, c] += 1
 
