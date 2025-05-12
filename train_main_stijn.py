@@ -103,7 +103,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
                     break
 
             if algorithm == 'mc':
-                agent, max_diff_list, flag_break = train_mc3(agent, state, env, iters, episode, delta, max_diff_list)
+                agent, max_diff_list, flag_break = train_mc3(agent, state, env, iters, episodes, delta, max_diff_list)
                 if flag_break:
                     break
 

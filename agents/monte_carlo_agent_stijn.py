@@ -15,6 +15,7 @@ class MonteCarloAgent(BaseAgent):
         self.returns_sum = {}
         self.returns_count = {}
         self.visit_counts = np.zeros(grid_shape, dtype=int)  # Only used for plotting, does not break Markov Property
+        self.init_epsilon = epsilon
 
     def _ensure_state_exists_returns_sum(self, state):
         """If state does not exist (is not in the dictionary) yet, create an entry for this state initializing the Q-value for all actions at 0."""
@@ -31,9 +32,10 @@ class MonteCarloAgent(BaseAgent):
         if state not in self.q_table:
             self.q_table[state] = np.array([0.0 for _ in range(self.n_actions)])
 
-    def _dynamic_params(self):
+    def _dynamic_params(self, nr_of_episodes):
         """Halve the exploration rate"""
-        self.epsilon = max(self.epsilon-0.05, 0.1)
+        stepsize = (self.init_epsilon - 0.1) /( nr_of_episodes * 0.9)
+        self.epsilon = max(self.epsilon-stepsize, 0.1)
 
     def _closer_to_termination(self):
         """Keep track in how many consecutive episodes the Q-values did not change significantly. I.e. max_diff of Q-values below some delta."""

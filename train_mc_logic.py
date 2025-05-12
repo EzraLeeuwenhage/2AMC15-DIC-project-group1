@@ -65,9 +65,8 @@ def train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episod
 
     return agent, max_diff_list
 
-def train_mc3(agent, state, env, iters, episode, delta, max_diff_list):
-    if (episode % 1000 == 0) and (episode != 0):
-        agent._dynamic_params()
+def train_mc3(agent, state, env, iters, nr_of_episodes, delta, max_diff_list):
+    agent._dynamic_params(nr_of_episodes)
 
     q_table_old = {
         state: values.copy()   # if `values` is a NumPy array; or list(values) if it’s a list
