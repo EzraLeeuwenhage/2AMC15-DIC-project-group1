@@ -33,7 +33,7 @@ class MonteCarloAgent(BaseAgent):
 
     def _dynamic_params(self):
         """Halve the exploration rate"""
-        self.epsilon = max(self.epsilon-0.05, 0.0)
+        self.epsilon = max(self.epsilon-0.05, 0.1)
 
     def _closer_to_termination(self):
         """Keep track in how many consecutive episodes the Q-values did not change significantly. I.e. max_diff of Q-values below some delta."""

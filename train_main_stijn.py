@@ -112,6 +112,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
                 break
 
         # Evaluate the agent
+        agent.epsilon = 0
         Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
         plot_max_diff(max_diff_list)
         if algorithm=='q_learning' or algorithm=='mc':  # TODO: Make sure that this works for the other algorithm. I standardized the plotting function it can be found in utils/plots.py
