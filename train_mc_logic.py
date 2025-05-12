@@ -66,7 +66,7 @@ def train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episod
     return agent, max_diff_list
 
 def train_mc3(agent, state, env, iters, episode, delta, max_diff_list):
-    if (episode % 400 == 0) and (episode != 0):
+    if (episode % 1000 == 0) and (episode != 0):
         agent._dynamic_params()
 
     q_table_old = {
@@ -81,6 +81,8 @@ def train_mc3(agent, state, env, iters, episode, delta, max_diff_list):
     while not done and step < iters:
         action = agent.take_action(state)
         next_state, reward, done, _ = env.step(action)
+        if reward >0:
+            reward = 1000
         episode_list.append((state, action, reward))
         state = next_state
         step += 1
