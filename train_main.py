@@ -3,7 +3,7 @@ Train your RL Agent in this file.
 """
 from agents.value_iteration_agent import ValueIterationAgent
 from agents.q_learning_agent import QLearningAgent
-from agents.monte_carlo_agent import MonteCarloAgent
+from agents.monte_carlo_agent_v2 import MonteCarloAgent
 from argparse import ArgumentParser
 from pathlib import Path
 from tqdm import tqdm
@@ -12,7 +12,7 @@ import numpy as np
 from world.grid import Grid  # Import the Grid class
 from utils.plots import plot_max_diff, plot_policy_heatmap
 from train_q_learning_logic import train_q_learning
-from train_mc_logic import train_mc2
+from train_mc_v2_logic import train_mc_control
 from train_DP_logic import train_DP
 try:
     from world import Environment
@@ -47,7 +47,7 @@ def parse_args():
                    help="Number of iterations to go through.")
     p.add_argument("--random_seed", type=int, default=0,
                    help="Random seed for reproducibility.")
-    p.add_argument("--epsilon",      type=float, default=1.0,
+    p.add_argument("--epsilon_max",      type=float, default=1.0,
                    help="Starting epsilon for ε-greedy.")
     p.add_argument("--epsilon_min",  type=float, default=0.1,
                    help="Minimum epsilon after decay.")
@@ -65,7 +65,7 @@ def parse_args():
 
 
 def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed,
-         epsilon, epsilon_min, decay_rate, gamma, eval_steps, n_eps_gui, delta):
+         epsilon_max, epsilon_min, decay_rate, gamma, eval_steps, n_eps_gui, delta):
     """Main loop of the program."""
 
     for grid in grid_paths:  # not yet used, because Q-learning per grid world
@@ -79,9 +79,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             # Initialize agent
             agent = QLearningAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
         if algorithm == 'mc':
-            agent = MonteCarloAgent(n_actions=4,
-                                    epsilon=epsilon,
-                                    gamma=gamma)
+            agent = MonteCarloAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
         if algorithm=='dp':
             agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
 
@@ -103,7 +101,9 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
                     break
 
             if algorithm == 'mc':
-                agent, max_diff_list = train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episode, max_diff_list)
+                agent, max_diff_list, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon_max, epsilon_min)
+                if flag_break:
+                    break
 
             if algorithm == 'dp':
                 agent, value_function, optimal_policy, max_diff_list = train_DP(agent, env, max_diff_list)
@@ -114,8 +114,10 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
         plot_max_diff(max_diff_list)
         if algorithm=='q_learning':  # TODO: Make sure that this works for the other algorithm. I standardized the plotting function it can be found in utils/plots.py
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+        if algorithm=='mc':  # TODO: Make sure that this works for the other algorithm. I standardized the plotting function it can be found in utils/plots.py
+            plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
 if __name__ == '__main__':
     args = parse_args()
     main(args.GRID, args.algorithm, args.no_gui, args.sigma, args.fps, args.episodes, args.iter, args.random_seed,
-         args.epsilon, args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps, args.n_eps_gui, args.delta)
+         args.epsilon_max, args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps, args.n_eps_gui, args.delta)
