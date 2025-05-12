@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_max_diff, plot_policy_heatmap
+from utils.plots import plot_max_diff, plot_policy_heatmap, plot_V
 from train_q_learning_logic import train_q_learning
 from train_mc_logic import train_mc2
 from train_DP_logic import train_DP
@@ -86,7 +86,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
 
         for episode in trange(episodes):
-            print(episode)
+            #print(episode)
             if n_eps_gui == -1:
                 no_gui = True
             elif episode % n_eps_gui == 0:
@@ -100,6 +100,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             if algorithm=='q_learning':
                 agent, max_diff_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode)
                 if flag_break:
+
                     break
 
             if algorithm == 'mc':
@@ -109,11 +110,17 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
                 agent, value_function, optimal_policy, max_diff_list = train_DP(agent, env, max_diff_list)
                 break
 
-        # Evaluate the agent
-        Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
-        plot_max_diff(max_diff_list)
-        if algorithm=='q_learning':  # TODO: Make sure that this works for the other algorithm. I standardized the plotting function it can be found in utils/plots.py
+
+        if algorithm=='dp':
+            plot_V(agent)
+            visit_counts = (grid_.cells == 3).astype(int)
+            plot_policy_heatmap(optimal_policy, visit_counts, grid_.cells)
+        else:
+            agent.epsilon = 0
+            plot_max_diff(max_diff_list)
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+
+        Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
 
 if __name__ == '__main__':
     args = parse_args()

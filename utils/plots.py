@@ -25,6 +25,17 @@ def plot_max_diff(max_diff_list):
     plt.tight_layout()
     plt.show()
 
+def plot_V(agent):
+    """Plot convergence (max delta V over states per step)."""
+    plt.figure(figsize=(8, 5))
+    plt.plot(agent.delta_history, label='Max delta V')
+    plt.xlabel('Iterations')
+    plt.ylabel('Max Value Change')
+    plt.title('Value Function Convergence')
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 # Plotting the visit heatmap with policy
 #TODO: this function does not work for all the grids. It does not work for example_grid.npy
