@@ -24,7 +24,7 @@ except ModuleNotFoundError:
 
 def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
     """Main loop of the program."""
-
+    #print(agent.visit_counts)
     if (episode % 100 == 0) and (episode != 0):
         agent._dynamic_params()
 
@@ -33,7 +33,7 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
         for state, values in agent.q_table.items()
     }
 
-    for _ in trange(iters):
+    for _ in range(iters):
 
         # Agent takes an action based on the latest observation and info.
         action = agent.take_action(state)
@@ -60,7 +60,6 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode):
         max_diff = 1 # np.inf
 
     max_diff_list.append(max_diff)
-    print(max_diff)
 
     # Stopping criterion --> no significant change for N=20 episodes in a row.
     if max_diff < delta:

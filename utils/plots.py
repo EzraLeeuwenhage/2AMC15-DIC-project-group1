@@ -27,6 +27,15 @@ def plot_max_diff(max_diff_list):
 
 
 # Plotting the visit heatmap with policy
+#TODO: this function does not work for all the grids. It does not work for example_grid.npy
+# error:
+#  File "C:\Users\20203666\Documents\GitHub\2AMC15-DIC-project-group1\utils\plots.py", line 56, in plot_policy_heatmap
+#     if layout_matrix[i, j] in [1, 2]:  # grey color for borders and obstacles
+#         ~~~~~~~~~~~~~^^^^^^
+# IndexError: index 7 is out of bounds for axis 0 with size 7
+# --
+# the error is happens with grids with diff number rows as cols
+# the cause are the switched around rows and cols in the code of the teachers
 
 def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: np.ndarray):
     """
@@ -60,7 +69,7 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
     # Overlay targets --> potentially add one for chargers later
     for i in range(nrows):
         for j in range(ncols):
-            if layout_matrix[i, j] in [3]: 
+            if layout_matrix[i, j] in [3]:
                 circle = Circle(xy=(j, i), radius=0.3, color='#92e000')  
                 # add green circle for target, but at same time color in background to see how often it was reached
                 ax.add_patch(circle)
