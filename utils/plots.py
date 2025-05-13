@@ -37,25 +37,18 @@ def plot_V(agent):
     plt.tight_layout()
     plt.show()
 
-def calc_normilized_auc(reward_list):
+def calc_normalized_auc(reward_list):
     episodes = np.arange(len(reward_list))
-
     auc = np.trapz(reward_list, episodes)
-
     min_reward = min(reward_list)
     max_reward = max(reward_list)
-
-
     min_auc = min_reward * (len(reward_list) - 1)
     max_auc = max_reward * (len(reward_list) - 1)
-
     normalized_auc = (auc - min_auc) / (max_auc - min_auc) if max_auc != min_auc else 0
-
     return normalized_auc
 
 def calc_auc(reward_list):
     episodes = np.arange(len(reward_list))
-
     auc = np.trapz(reward_list, episodes)
     return auc
 

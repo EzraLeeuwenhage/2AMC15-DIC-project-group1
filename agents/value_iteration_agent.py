@@ -1,8 +1,5 @@
 from agents.base_agent import BaseAgent
 from collections import defaultdict
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 class ValueIterationAgent(BaseAgent):
@@ -159,5 +156,3 @@ class ValueIterationAgent(BaseAgent):
             self.policy[state] = best_action
         
         return self.V, self.policy
-
-

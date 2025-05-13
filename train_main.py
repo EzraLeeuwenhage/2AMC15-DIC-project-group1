@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_time_series, plot_policy_heatmap, plot_V, calc_auc, calc_normilized_auc
+from utils.plots import plot_time_series, plot_policy_heatmap, plot_V, calc_auc, calc_normalized_auc
 from train_q_learning_logic import train_q_learning
 from train_mc_v2_logic import train_mc_control
 from train_DP_logic import train_DP
@@ -113,21 +113,27 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
 
 
         if algorithm=='dp':
-            plot_V(agent)
+            # TODO: output VI Q-values for ground truth to compare other results to
+
+            # TODO: plot time series max delta convergence 
+            
+            # TODO: could store policy after each iteration and simulate a run, producing artificial 'visit count'
             visit_counts = (grid_.cells == 3).astype(int)
             plot_policy_heatmap(optimal_policy, visit_counts, grid_.cells)
 
         elif algorithm=='q_learning':
+            # TODO: add MAE of Q-values w.r.t. VI ground truth
             print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
-            print(f'normilized AUC under the learning curve: {calc_normilized_auc(cumulative_reward_list)}')
+            print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
             agent.epsilon = 0
             plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
             plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
         else:
+            # TODO: add MAE of Q-values w.r.t. VI ground truth
             print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
-            print(f'normilized AUC under the learning curve: {calc_normilized_auc(cumulative_reward_list)}')
+            print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
             agent.epsilon = 0
             plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
             plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
