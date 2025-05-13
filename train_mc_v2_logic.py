@@ -33,15 +33,20 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
         for state, values in agent.q_table.items()
     }
 
-    for _ in trange(iters):
+    for step in trange(iters):
 
         # Agent takes an action based on the latest observation and info.
         action = agent.take_action(state)
 
         # The action is performed in the environment
         next_state, reward, terminated, info = env.step(action)
-        # if terminated:
-        #     reward += 100_000
+
+        # Give additional reward on reaching the end goal, minus the steps it took to reach, encouraging the agent to reach faster
+        if terminated:
+            reward = 1_000 - step
+        # Discourage bumping into walls
+        if next_state == state:
+            reward = -100
 
         # Update episode-history
         agent.update(state, reward, info["actual_action"])
@@ -59,6 +64,7 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
     # max difference in q values
     max_diff = 0
     all_in_common_keys = set(agent.q_table.keys()) & set(q_table_old.keys())
+    # new_state_explored = len(agent.q_table.keys()) - len(q_table_old.keys())
     for key in all_in_common_keys:
         abs_diff = np.max((np.abs(agent.q_table[key] - q_table_old[key])))
         if abs_diff > max_diff:
@@ -67,14 +73,5 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
         max_diff = 1 # np.inf
 
     max_diff_list.append(max_diff)
-    print(max_diff)
-
-    # Stopping criterion --> no significant change for N=20 episodes in a row.
-    if max_diff < delta:
-        agent._closer_to_termination()
-        if agent.nr_consecutive_eps_no_change >= 20:
-            return agent, max_diff_list, cumulative_reward_list, True
-    else:
-        agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
     
     return agent, max_diff_list, cumulative_reward_list, False
