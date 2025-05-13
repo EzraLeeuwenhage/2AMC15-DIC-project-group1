@@ -36,7 +36,7 @@ class MonteCarloAgent(BaseAgent):
     def initialize_epsilon(self, episode, episodes, epsilon_max, epsilon_min):
         '''Initialize epsilon for current episode based on epsilon decay from epsilon to epsilon_min'''
         # Exponential epsilon decay from epsilon=1.0 to epsilon_min=0.2
-        decay_constant = np.log(epsilon_max / epsilon_min) / episodes
+        decay_constant = 5.0 * (np.log(epsilon_max / epsilon_min) / episodes)
         self.epsilon_mc = epsilon_min + (epsilon_max - epsilon_min) * np.exp(-decay_constant * episode)
         print(f"Epsilon value is: {self.epsilon_mc} for episode number: {episode}")
 
@@ -71,7 +71,7 @@ class MonteCarloAgent(BaseAgent):
 
     def behavior_prob(self, state, action):
         """Probability of taking an action under epsilon-greedy behavior policy"""
-        greedy_action = np.argmax(self.q_table[state])
+        greedy_action = int(np.argmax(self.q_table[state]))
         if action == greedy_action:
             return (1 - self.epsilon_mc) + (self.epsilon_mc / len(self.actions))
         return self.epsilon_mc / len(self.actions)
@@ -83,30 +83,11 @@ class MonteCarloAgent(BaseAgent):
         W = 1.0
         for (state, action, reward) in reversed(self.episode_history):
             self._ensure_state_exists(state)
-            # Every visit update for MC Control (using RL 2020 book)
             # MC Control update rule for G
             G = self.gamma * G + reward
             self.C[state][action] += W
-            self.q_table[state][action] += (W / self.C[state][action]) * (G - self.q_table[state][action])    # Imporatance sampling for off policy Mc control using RL 2020 book
-            greedy_action = int(np.argmax(self.q_table[state])) # Ensuring no update is made for target policy
+            self.q_table[state][action] += (W / self.C[state][action]) * (G - self.q_table[state][action])    # Imporatance sampling for off policy Mc control using RL 2020 book by Sutton and Barto
+            greedy_action = int(np.argmax(self.q_table[state])) # Stoping when point deviating from target policy is found
             if action != greedy_action:
                 break
             W /= self.behavior_prob(state, action)
-        
-        # # First viist MC Control? (using RL 2020 book)
-        # G = 0
-        # W = 1.0
-        # visited = set()
-        # for (state, action, reward) in reversed(self.episode_history):
-        #     self._ensure_state_exists(state)
-        #     # First visit update for MC Control
-        #     if (state, action) not in visited:
-        #         visited.add((state, action))
-        #         # MC Control update rule for G
-        #         G = self.gamma * G + reward
-        #         self.C[state][action] += W
-        #         self.q_table[state][action] += (W / self.C[state][action]) * (G - self.q_table[state][action])    # Imporatance sampling for off policy Mc control using RL 2020 book
-        #         greedy_action = int(np.argmax(self.q_table[state])) # Ensuring no update is made for target policy
-        #         if action != greedy_action:
-        #             break
-        #         W /= self.behavior_prob(state, action)
