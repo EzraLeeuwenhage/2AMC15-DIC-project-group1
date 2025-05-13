@@ -3,7 +3,7 @@ Train your RL Agent in this file.
 """
 from agents.value_iteration_agent import ValueIterationAgent
 from agents.q_learning_agent import QLearningAgent
-from agents.monte_carlo_agent import MonteCarloAgent
+from agents.monte_carlo_agent_v2 import MonteCarloAgent
 from argparse import ArgumentParser
 from pathlib import Path
 from tqdm import tqdm
@@ -12,7 +12,7 @@ import numpy as np
 from world.grid import Grid  # Import the Grid class
 from utils.plots import plot_time_series, plot_policy_heatmap, plot_V, calc_auc, calc_normilized_auc
 from train_q_learning_logic import train_q_learning
-from train_mc_logic import train_mc2
+from train_mc_v2_logic import train_mc_control
 from train_DP_logic import train_DP
 try:
     from world import Environment
@@ -80,9 +80,7 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             # Initialize agent
             agent = QLearningAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
         if algorithm == 'mc':
-            agent = MonteCarloAgent(n_actions=4,
-                                    epsilon=epsilon,
-                                    gamma=gamma)
+            agent = MonteCarloAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
         if algorithm=='dp':
             agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
 
@@ -105,7 +103,9 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
                     break
 
             if algorithm == 'mc':
-                agent, max_diff_list = train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episode, max_diff_list)
+                agent, max_diff_list, cumulative_reward_list, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
+                if flag_break:
+                    break
 
             if algorithm == 'dp':
                 agent, value_function, optimal_policy, max_diff_list = train_DP(agent, env, max_diff_list)
@@ -126,8 +126,11 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
         else:
+            print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
+            print(f'normilized AUC under the learning curve: {calc_normilized_auc(cumulative_reward_list)}')
             agent.epsilon = 0
-            plot_time_series(max_diff_list, 'Convergence: Max Difference per Episode')
+            plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
+            plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
         Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
