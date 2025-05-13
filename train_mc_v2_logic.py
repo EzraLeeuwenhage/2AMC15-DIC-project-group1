@@ -4,7 +4,6 @@ from pathlib import Path
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_max_diff
 
 try:
     from world import Environment
@@ -22,7 +21,7 @@ except ModuleNotFoundError:
     from agents.random_agent import RandomAgent
 
 
-def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon_max, epsilon_min):
+def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon_max, epsilon_min, cumulative_reward_list):
     """Main loop of the program."""
 
     # initialize current episode history and epsilon values for MC agent
@@ -52,6 +51,7 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
             break
 
         state = next_state
+        cumulative_reward_list.append(env.world_stats["cumulative_reward"])
 
     # MC Control update at the end of the episode
     agent.mc_update()
@@ -73,8 +73,8 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
     if max_diff < delta:
         agent._closer_to_termination()
         if agent.nr_consecutive_eps_no_change >= 20:
-            return agent, max_diff_list, True
+            return agent, max_diff_list, cumulative_reward_list, True
     else:
         agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
     
-    return agent, max_diff_list, False
+    return agent, max_diff_list, cumulative_reward_list, False
