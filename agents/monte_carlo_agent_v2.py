@@ -20,14 +20,13 @@ class MonteCarloAgent(BaseAgent):
     def __init__(self, grid_shape, actions = [0, 1, 2, 3], alpha=0.1, gamma=0.9):
         super().__init__()
         self.q_table = {}  # Layout of Q_table is this dictionary structure: {(state): [action_values]}
-        self.N_q = {}      # Layout of count for every state-action for MC Control update, using dictionary structure: {(state): [action_values]}
+        self.C = {}        # Layout of cumulative weights for every state-action for MC Control update, using dictionary structure: {(state): [action_values]}
         self.actions = actions
         self.alpha = alpha
         self.gamma = gamma
         self.nr_consecutive_eps_no_change = 0  # only used for stopping criterion
         self.visit_counts = np.zeros(grid_shape, dtype=int)  # Only used for plotting, does not break Markov Property
         self.episode_history = []   # Episode history
-        self.G = 0  # G value for MC Control update
         self.epsilon_mc = 1.0   # Epsilon initialize for agent
     
     def initialize_episode_history(self):
@@ -37,8 +36,8 @@ class MonteCarloAgent(BaseAgent):
     def initialize_epsilon(self, episode, episodes, epsilon_max, epsilon_min):
         '''Initialize epsilon for current episode based on epsilon decay from epsilon to epsilon_min'''
         # Exponential epsilon decay from epsilon=1.0 to epsilon_min=0.2
-        decay_rate = (epsilon_max - epsilon_min) / episodes
-        self.epsilon_mc = max(epsilon_min, epsilon_max - decay_rate * episode)
+        decay_constant = np.log(epsilon_max / epsilon_min) / episodes
+        self.epsilon_mc = epsilon_min + (epsilon_max - epsilon_min) * np.exp(-decay_constant * episode)
         print(f"Epsilon value is: {self.epsilon_mc} for episode number: {episode}")
 
     def _closer_to_termination(self):
@@ -50,17 +49,17 @@ class MonteCarloAgent(BaseAgent):
         self.nr_consecutive_eps_no_change = 0
 
     def _ensure_state_exists(self, state):
-        """If state does not exist (is not in the dictionary) yet, create an entry for this state initializing the Q-value for all actions at 0."""
+        """If state does not exist (is not in the dictionary) yet, create an entry for this state initializing the Q-value and C for all actions at 0."""
         if state not in self.q_table:
             self.q_table[state] = np.array([0.0 for _ in self.actions])
-            self.N_q[state] = np.array([0.0 for _ in self.actions])
+            self.C[state] = np.array([0.0 for _ in self.actions])
 
     def take_action(self, state: tuple[int, int]) -> int:
         """Choose some action using epsilon greedy, and before an action is chosen we record the visit to a state."""
         self._ensure_state_exists(state)
         # Record visit of being in a state when taking an action from that state
-        r, c = state
-        self.visit_counts[r, c] += 1
+        c, r = state  # Environment uses the (c, r) indexing which is a bit odd
+        self.visit_counts[r, c] += 1  # We maintain the visit counts in the more usual (r, c) as this is more usual, and better for plotting
         # Epsilon-greedy
         if np.random.rand() < self.epsilon_mc:
             return np.random.choice(self.actions)  # explore
@@ -70,14 +69,44 @@ class MonteCarloAgent(BaseAgent):
         """Execute update to episode history for eventual MC_control update at the end of an episode"""
         self.episode_history.append((state, action, reward))
 
+    def behavior_prob(self, state, action):
+        """Probability of taking an action under epsilon-greedy behavior policy"""
+        greedy_action = np.argmax(self.q_table[state])
+        if action == greedy_action:
+            return (1 - self.epsilon_mc) + (self.epsilon_mc / len(self.actions))
+        return self.epsilon_mc / len(self.actions)
+
     def mc_update(self):
         """Execute update to episode history for eventual MC_control update at the end of an episode"""
-        self.G = 0
+        
+        G = 0
+        W = 1.0
         for (state, action, reward) in reversed(self.episode_history):
             self._ensure_state_exists(state)
-            # G value update
-            self.G = self.gamma * self.G + reward 
-            # MC Control every-state
-            self.N_q[state][action] += 1 
-            # Q value MC every-visit update
-            self.q_table[state][action] += (1 / self.N_q[state][action]) * (self.G - self.q_table[state][action])
+            # Every visit update for MC Control (using RL 2020 book)
+            # MC Control update rule for G
+            G = self.gamma * G + reward
+            self.C[state][action] += W
+            self.q_table[state][action] += (W / self.C[state][action]) * (G - self.q_table[state][action])    # Imporatance sampling for off policy Mc control using RL 2020 book
+            greedy_action = int(np.argmax(self.q_table[state])) # Ensuring no update is made for target policy
+            if action != greedy_action:
+                break
+            W /= self.behavior_prob(state, action)
+        
+        # # First viist MC Control? (using RL 2020 book)
+        # G = 0
+        # W = 1.0
+        # visited = set()
+        # for (state, action, reward) in reversed(self.episode_history):
+        #     self._ensure_state_exists(state)
+        #     # First visit update for MC Control
+        #     if (state, action) not in visited:
+        #         visited.add((state, action))
+        #         # MC Control update rule for G
+        #         G = self.gamma * G + reward
+        #         self.C[state][action] += W
+        #         self.q_table[state][action] += (W / self.C[state][action]) * (G - self.q_table[state][action])    # Imporatance sampling for off policy Mc control using RL 2020 book
+        #         greedy_action = int(np.argmax(self.q_table[state])) # Ensuring no update is made for target policy
+        #         if action != greedy_action:
+        #             break
+        #         W /= self.behavior_prob(state, action)
