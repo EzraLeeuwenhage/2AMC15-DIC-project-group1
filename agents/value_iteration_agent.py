@@ -13,6 +13,7 @@ class ValueIterationAgent(BaseAgent):
         self.n_actions = n_actions
         self.gamma = gamma
         self.delta_threshold = delta_threshold
+        self.q_table = {} 
         self.V = defaultdict(float)
         self.policy = {} 
         self.delta_history = [] # per step maximum change over all state values
@@ -117,7 +118,8 @@ class ValueIterationAgent(BaseAgent):
                         value += prob * (reward + self.gamma * self.V[actual_next_state])
 
                     action_values.append(value)
-
+                
+                self.q_table[state] = action_values
                 new_V[state] = max(action_values)
                 delta = max(delta, abs(self.V[state] - new_V[state]))
 
@@ -155,4 +157,4 @@ class ValueIterationAgent(BaseAgent):
 
             self.policy[state] = best_action
         
-        return self.V, self.policy
+        return self.V, self.q_table, self.policy, self.delta_history

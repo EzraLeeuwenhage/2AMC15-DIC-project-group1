@@ -18,22 +18,10 @@ def plot_time_series(value_list, y_label = '', title=''):
     episodes = range(len(value_list))
     plt.figure(figsize=(8, 4))
     plt.plot(episodes, value_list, linestyle='-', linewidth=1)  # thin line, no markers
-    plt.xlabel('Episode')
+    plt.xlabel('Episode/Iteration')
     plt.ylabel(y_label)
     plt.title(title)
     plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-def plot_V(agent):
-    """Plot convergence (max delta V over states per step)."""
-    plt.figure(figsize=(8, 5))
-    plt.plot(agent.delta_history, label='Max delta V')
-    plt.xlabel('Iterations')
-    plt.ylabel('Max Value Change')
-    plt.title('Value Function Convergence')
-    plt.grid(True)
-    plt.legend()
     plt.tight_layout()
     plt.show()
 
