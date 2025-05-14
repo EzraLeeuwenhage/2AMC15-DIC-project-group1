@@ -37,9 +37,9 @@ def parse_args():
                    help="algortihm to train.")
     p.add_argument("--no_gui",    action="store_true",
                    help="Disable rendering to train faster.")
-    p.add_argument("--agent_start_pos_col",    type=int,
+    p.add_argument("--agent_start_pos_col",    type=int,   default=None,
                    help="Starting position column of the agent in the gui representation of the grid.")
-    p.add_argument("--agent_start_pos_row",    type=int,
+    p.add_argument("--agent_start_pos_row",    type=int,   default=None,
                    help="Starting position row of the agent in the gui representation of the grid.")
     p.add_argument("--sigma",     type=float, default=0.1,
                    help="Slip probability in the environment.")
@@ -78,8 +78,12 @@ def main(grid_paths, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row
         cumulative_reward_list = []
 
         grid_ = Grid.load_grid(grid)
-        agent_start_pos = (agent_start_pos_col, agent_start_pos_row)
-        assert grid_.cells[agent_start_pos_col, agent_start_pos_row] == 0, f"Starting position {agent_start_pos} is not empty in the grid."
+
+        if agent_start_pos_col is None or agent_start_pos_row is None:
+            agent_start_pos = None
+        else:
+            agent_start_pos = (agent_start_pos_col, agent_start_pos_row)
+            assert grid_.cells[agent_start_pos_col, agent_start_pos_row] == 0, f"Starting position {agent_start_pos} is not empty in the grid."
 
         env = Environment(grid, no_gui, agent_start_pos=agent_start_pos, sigma=sigma, target_fps=fps,
                           random_seed=random_seed)
