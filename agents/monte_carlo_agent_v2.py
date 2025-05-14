@@ -17,10 +17,10 @@ class MonteCarloAgent(BaseAgent):
         - 3: Move right
     """
 
-    def __init__(self, grid_shape, actions = [0, 1, 2, 3], alpha=0.1, gamma=0.9):
+    def __init__(self, grid_shape, actions, alpha, gamma):
         super().__init__()
-        self.q_table = {}  # Layout of Q_table is this dictionary structure: {(state): [action_values]}
-        self.C = {}        # Layout of cumulative weights for every state-action for MC Control update, using dictionary structure: {(state): [action_values]}
+        self.q_table = {}  # Q_table: {(state): [action_values]}
+        self.C = {}        # cumulative weights for every state-action for MC Control update: {(state): [action_values]}
         self.actions = actions
         self.alpha = alpha
         self.gamma = gamma

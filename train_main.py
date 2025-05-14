@@ -1,23 +1,14 @@
 """
 Train your RL Agent in this file. 
 """
-from agents.value_iteration_agent import ValueIterationAgent
-from agents.q_learning_agent import QLearningAgent
-from agents.monte_carlo_agent_v2 import MonteCarloAgent
 from argparse import ArgumentParser
 from pathlib import Path
-from tqdm import tqdm
-from tqdm import trange
-import numpy as np
-from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_time_series, plot_policy_heatmap, calc_auc, calc_normalized_auc, extract_VI_agent_optimal_path
+from world.grid import Grid
+from utils.train_utils import init_agent, train_agent, evaluate_and_plot, set_agent_start_pos
 from utils.reward_functions import custom_reward_function
-from train_q_learning_logic import train_q_learning
-from train_mc_v2_logic import train_mc_control
-from train_DP_logic import train_DP
+
 try:
     from world import Environment
-    from agents.random_agent import RandomAgent
 except ModuleNotFoundError:
     from os import path
     from os import pardir
@@ -28,10 +19,11 @@ except ModuleNotFoundError:
     if root_path not in sys.path:
         sys.path.extend(root_path)
     from world import Environment
-    from agents.random_agent import RandomAgent
 
 def parse_args():
-    p = ArgumentParser(description="Monte Carlo RL Trainer.")
+    p = ArgumentParser(description="Main RL Algorithm Trainer.")
+
+    # arguments for environment
     p.add_argument("GRID",        type=Path, nargs="+",
                    help="Grid file(s) to use for training.")
     p.add_argument("--algorithm", type=str,
@@ -48,113 +40,65 @@ def parse_args():
                    help="Reward function of the environment.")
     p.add_argument("--fps",       type=int,   default=30,
                    help="Frames per second for GUI.")
-    p.add_argument("--episodes",  type=int,   default=10000,
-                   help="Number of training episodes.")
-    p.add_argument("--iter", type=int, default=1000,
-                   help="Number of iterations to go through.")
     p.add_argument("--random_seed", type=int, default=0,
                    help="Random seed for reproducibility.")
+    
+    # arguments for all agents
+    p.add_argument("--gamma", type=float, default=0.9,
+                   help="Discount factor.")
+    p.add_argument("--delta", type=int, default=1e-6,
+                   help="A threshold for the Q-value updates for early stopping")
+    
+    # arguments for MC & Q-learning
+    p.add_argument("--alpha", type=float, default=0.1,
+                   help="Learning rate.")
     p.add_argument("--epsilon",      type=float, default=1.0,
                    help="Starting epsilon for ε-greedy.")
     p.add_argument("--epsilon_min",  type=float, default=0.1,
                    help="Minimum epsilon after decay.")
-    p.add_argument("--decay_rate",   type=float, default=0.01,
-                   help="Decay rate for exponential epsilon.")
-    p.add_argument("--gamma",      type=float, default=0.9,
-                   help="Discount factor.")
-    p.add_argument("--eval_steps", type=int,   default=200,
-                   help="Steps for final evaluation.")
+    p.add_argument("--episodes",  type=int,   default=10000,
+                   help="Number of training episodes.")
+    p.add_argument("--iters", type=int, default=1000,
+                   help="Number of iterations per episode.")
+    
+    # arguments for output and evaluation settings
     p.add_argument("--n_eps_gui", type=int, default=100,
                    help="percetage of GUI onnn of episodes to enable GUI (e.g., every N episodes).")
-    p.add_argument("--delta", type=int, default=1e-6,
-                   help="A threshold for the Q-value updates for early stopping")
+    p.add_argument("--output_plots", action="store_true",
+                   help="Activate plot output.")
+    
     return p.parse_args()
 
 
-def main(grid, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigma, reward_func, fps, episodes, iters, random_seed,
-         epsilon, epsilon_min, decay_rate, gamma, eval_steps, n_eps_gui, delta):
-    """Main loop of the program."""
-
-    max_diff_list = []  # For tracking convergence and convergence plot
-    cumulative_reward_list = []
-
-    grid_ = Grid.load_grid(grid)
-
-    if agent_start_pos_col is None or agent_start_pos_row is None:
-        agent_start_pos = None
-    else:
-        agent_start_pos = (agent_start_pos_col, agent_start_pos_row)
-        assert grid_.cells[agent_start_pos_col, agent_start_pos_row] == 0, f"Starting position {agent_start_pos} is not empty in the grid."
-
-    env = Environment(grid, no_gui, agent_start_pos=agent_start_pos, sigma=sigma, target_fps=fps,
+def main(grid, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigma, reward_func, fps, random_seed,
+        gamma, delta, 
+        alpha, epsilon, epsilon_min, episodes, iters, 
+        n_eps_gui, output_plots):
+    """Main program for training a specific agent on a specific grid and extracting performance measures."""
+    # init environment
+    grid_fp = Path(grid[0])
+    grid_ = Grid.load_grid(grid_fp)
+    agent_start_pos = set_agent_start_pos(agent_start_pos_col, agent_start_pos_row, grid_.cells)
+    env = Environment(grid_fp, no_gui, agent_start_pos=agent_start_pos, sigma=sigma, target_fps=fps,
                         random_seed=random_seed, reward_fn=reward_func)
 
-    if algorithm=='q_learning':
-        # Initialize agent
-        agent = QLearningAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
-    if algorithm == 'mc':
-        agent = MonteCarloAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
-    if algorithm=='dp':
-        agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
-
-    for episode in trange(episodes):
-        #print(episode)
-        if n_eps_gui == -1:
-            no_gui = True
-        elif episode % n_eps_gui == 0:
-            no_gui = False
-        else:
-            no_gui = True
-
-        # Set up the environment
-        state = env.reset(no_gui=no_gui)
-
-        if algorithm=='q_learning':
-            agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list)
-            if flag_break:
-
-                break
-
-        if algorithm == 'mc':
-            agent, max_diff_list, cumulative_reward_list, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
-            if flag_break:
-                break
-
-        if algorithm == 'dp':
-            agent, q_table, optimal_policy, max_diff_list = train_DP(agent, env, max_iterations=1000)
-            break
-
-
-    if algorithm=='dp':
-        # for state in q_table.keys():
-        #     q_values = q_table[state]
-        #     print(f"  Q-values: {q_values}")
-
-        # plot_time_series(max_diff_list, y_label='Max difference in Value Function', title = 'Convergence: Max Difference per Iteration')
-        visit_counts, optimal_path = extract_VI_agent_optimal_path(agent, env)
-        plot_policy_heatmap(agent.q_table, visit_counts, grid_.cells)
-        # for i, state in enumerate(optimal_path):
-        #     print(f"{i}: {state}")
-
-    elif algorithm=='q_learning':
-        print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
-        print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
-        agent.epsilon = 0
-        plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
-        plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
-        plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
-
-    else:
-        print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
-        print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
-        agent.epsilon = 0
-        plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
-        plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
-        plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+    # train the agent and collect performance measures
+    agent = init_agent(algorithm, grid_.cells.shape, alpha, gamma, delta)
+    trained_agent, max_diff_list, cumulative_reward_list = train_agent(
+            algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui)
+            
+    # Optionally plot agent performance
+    if output_plots:
+        evaluate_and_plot(trained_agent, algorithm, grid_, env, max_diff_list, cumulative_reward_list)
 
     return cumulative_reward_list
 
+
 if __name__ == '__main__':
     args = parse_args()
-    main(args.GRID, args.algorithm, args.no_gui, args.agent_start_pos_col, args.agent_start_pos_row, args.sigma, args.reward_func, args.fps, args.episodes, args.iter, args.random_seed,
-         args.epsilon, args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps, args.n_eps_gui, args.delta)
+    main(args.GRID, args.algorithm, args.no_gui, args.agent_start_pos_col, args.agent_start_pos_row, args.sigma, 
+        args.reward_func, args.fps, args.random_seed,
+        args.gamma, args.delta,
+        args.alpha, args.epsilon, args.epsilon_min, args.episodes, args.iters,
+        args.n_eps_gui, args.output_plots
+    )

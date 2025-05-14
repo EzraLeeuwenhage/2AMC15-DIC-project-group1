@@ -17,7 +17,7 @@ class QLearningAgent(BaseAgent):
         - 3: Move right
     """
 
-    def __init__(self, grid_shape, actions = [0, 1, 2, 3], alpha=0.1, gamma=0.9, epsilon=0.5):
+    def __init__(self, grid_shape, actions, alpha, gamma, epsilon=0.5):
         super().__init__()
         self.q_table = {}  # Layout of Q_table is this dictionary structure: {(state): [action_values]}
         self.actions = actions

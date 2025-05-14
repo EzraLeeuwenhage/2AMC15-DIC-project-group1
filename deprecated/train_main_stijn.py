@@ -11,9 +11,9 @@ from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
 from utils.plots import plot_max_diff, plot_policy_heatmap
-from train_q_learning_logic import train_q_learning
-from train_mc_logic import train_mc3
-from train_DP_logic import train_DP
+from train_logic.train_q_learning_logic import train_q_learning
+from train_logic.train_mc_logic import train_mc3
+from train_logic.train_DP_logic import train_DP
 try:
     from world import Environment
     from agents.random_agent import RandomAgent
