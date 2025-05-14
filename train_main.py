@@ -37,6 +37,10 @@ def parse_args():
                    help="algortihm to train.")
     p.add_argument("--no_gui",    action="store_true",
                    help="Disable rendering to train faster.")
+    p.add_argument("--agent_start_pos_col",    type=int,
+                   help="Starting position column of the agent in the gui representation of the grid.")
+    p.add_argument("--agent_start_pos_row",    type=int,
+                   help="Starting position row of the agent in the gui representation of the grid.")
     p.add_argument("--sigma",     type=float, default=0.1,
                    help="Slip probability in the environment.")
     p.add_argument("--fps",       type=int,   default=30,
@@ -64,7 +68,7 @@ def parse_args():
     return p.parse_args()
 
 
-def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed,
+def main(grid_paths, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigma, fps, episodes, iters, random_seed,
          epsilon, epsilon_min, decay_rate, gamma, eval_steps, n_eps_gui, delta):
     """Main loop of the program."""
 
@@ -72,9 +76,13 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
 
         max_diff_list = []  # For tracking convergence and convergence plot
         cumulative_reward_list = []
-        env = Environment(grid, no_gui, sigma=sigma, target_fps=fps,
-                          random_seed=random_seed)
+
         grid_ = Grid.load_grid(grid)
+        agent_start_pos = (agent_start_pos_col, agent_start_pos_row)
+        assert grid_.cells[agent_start_pos_col, agent_start_pos_row] == 0, f"Starting position {agent_start_pos} is not empty in the grid."
+
+        env = Environment(grid, no_gui, agent_start_pos=agent_start_pos, sigma=sigma, target_fps=fps,
+                          random_seed=random_seed)
 
         if algorithm=='q_learning':
             # Initialize agent
@@ -137,5 +145,5 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args.GRID, args.algorithm, args.no_gui, args.sigma, args.fps, args.episodes, args.iter, args.random_seed,
+    main(args.GRID, args.algorithm, args.no_gui, args.agent_start_pos_col, args.agent_start_pos_row, args.sigma, args.fps, args.episodes, args.iter, args.random_seed,
          args.epsilon, args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps, args.n_eps_gui, args.delta)
