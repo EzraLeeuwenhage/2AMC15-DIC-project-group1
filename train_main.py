@@ -121,19 +121,17 @@ def main(grid_paths, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row
 
 
         if algorithm=='dp':
-            # TODO: output VI Q-values for ground truth to compare other results to
             # for state in q_table.keys():
             #     q_values = q_table[state]
             #     print(f"  Q-values: {q_values}")
 
-            print(optimal_policy)
-
             # plot_time_series(max_diff_list, y_label='Max difference in Value Function', title = 'Convergence: Max Difference per Iteration')
-            # visit_counts = extract_VI_agent_optimal_path(agent, env)
-            # plot_policy_heatmap(optimal_policy, visit_counts, grid_.cells)
+            visit_counts, optimal_path = extract_VI_agent_optimal_path(agent, env)
+            plot_policy_heatmap(agent.q_table, visit_counts, grid_.cells)
+            # for i, state in enumerate(optimal_path):
+            #     print(f"{i}: {state}")
 
         elif algorithm=='q_learning':
-            # TODO: add MAE of Q-values w.r.t. VI ground truth
             print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
             print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
             agent.epsilon = 0
@@ -142,7 +140,6 @@ def main(grid_paths, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
         else:
-            # TODO: add MAE of Q-values w.r.t. VI ground truth
             print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
             print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
             agent.epsilon = 0
@@ -150,7 +147,7 @@ def main(grid_paths, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row
             plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
             plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
 
-        Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
+        # Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
 
 if __name__ == '__main__':
     args = parse_args()
