@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
-from utils.plots import plot_time_series, plot_policy_heatmap, calc_auc, calc_normalized_auc
+from utils.plots import plot_time_series, plot_policy_heatmap, calc_auc, calc_normalized_auc, extract_VI_agent_optimal_path
 from train_q_learning_logic import train_q_learning
 from train_mc_v2_logic import train_mc_control
 from train_DP_logic import train_DP
@@ -108,18 +108,21 @@ def main(grid_paths, algorithm, no_gui, sigma, fps, episodes, iters, random_seed
                     break
 
             if algorithm == 'dp':
-                agent, value_function, q_table, optimal_policy, max_diff_list = train_DP(agent, env, max_iterations=1000)
+                agent, q_table, optimal_policy, max_diff_list = train_DP(agent, env, max_iterations=1000)
                 break
 
 
         if algorithm=='dp':
             # TODO: output VI Q-values for ground truth to compare other results to
-            for state in q_table:
-                assert max(state) == value_function[state]
-            plot_time_series(max_diff_list, y_label='Max difference in Value Function', title = 'Convergence: Max Difference per Iteration')
-            # TODO: could store policy after each iteration and simulate a run, producing artificial 'visit count'
-            visit_counts = (grid_.cells == 3).astype(int)
-            plot_policy_heatmap(optimal_policy, visit_counts, grid_.cells)
+            # for state in q_table.keys():
+            #     q_values = q_table[state]
+            #     print(f"  Q-values: {q_values}")
+
+            print(optimal_policy)
+
+            # plot_time_series(max_diff_list, y_label='Max difference in Value Function', title = 'Convergence: Max Difference per Iteration')
+            # visit_counts = extract_VI_agent_optimal_path(agent, env)
+            # plot_policy_heatmap(optimal_policy, visit_counts, grid_.cells)
 
         elif algorithm=='q_learning':
             # TODO: add MAE of Q-values w.r.t. VI ground truth

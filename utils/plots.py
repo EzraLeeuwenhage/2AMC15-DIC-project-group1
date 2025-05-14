@@ -113,3 +113,32 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
     ax.set_ylabel('')
     plt.tight_layout()
     plt.show()
+
+def extract_VI_agent_optimal_path(agent, env):
+    """
+    Executes the optimal policy (from the value iteration agent) in the environment
+    and returns a visit_counts array highlighting the optimal path.
+
+    Args:
+        env: environment which agent was trained on.
+
+    Returns:
+        visit_counts: 2D visit count of 1 along the optimal path, 0 otherwise.
+                    Will be used for policy heatmap visualization.
+    """
+    state = env.reset()
+    env.no_gui = True
+    print(f"Initial state: {state}")
+    visit_counts = np.zeros(env.grid.shape, dtype=int)
+    visit_counts[state] = 1
+    terminated = False
+
+    while not terminated:
+        action = agent.take_action(state)
+        state, _, terminated, _ = env.step(action)
+        print(f"Action: {action}, New_State: {state}")
+        visit_counts[state] = 1
+        print(terminated)
+
+    print(visit_counts)
+    return visit_counts

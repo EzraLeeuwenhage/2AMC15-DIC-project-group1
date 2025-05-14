@@ -10,6 +10,6 @@ def train_DP(agent, env, max_iterations):
     grid = np.copy(env.grid)
     reward_fn = env.reward_fn
     states, P = agent.extract_transition_model(grid, env.sigma)
-    value_function, q_table, optimal_policy, max_diff_list = agent.value_iteration(grid, reward_fn, states, P, max_iterations)
+    _, q_table, optimal_policy, max_diff_list = agent.value_iteration(grid, reward_fn, states, P, max_iterations)
     optimal_policy = {key: one_hot_encode(optimal_policy[key], 4) for key in optimal_policy.keys()}
-    return agent, value_function, q_table, optimal_policy, max_diff_list
+    return agent, q_table, optimal_policy, max_diff_list
