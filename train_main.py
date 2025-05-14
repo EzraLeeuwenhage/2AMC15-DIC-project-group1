@@ -11,6 +11,7 @@ from tqdm import trange
 import numpy as np
 from world.grid import Grid  # Import the Grid class
 from utils.plots import plot_time_series, plot_policy_heatmap, calc_auc, calc_normalized_auc, extract_VI_agent_optimal_path
+from utils.reward_functions import custom_reward_function
 from train_q_learning_logic import train_q_learning
 from train_mc_v2_logic import train_mc_control
 from train_DP_logic import train_DP
@@ -43,6 +44,8 @@ def parse_args():
                    help="Starting position row of the agent in the gui representation of the grid. If None then random start position.")
     p.add_argument("--sigma",     type=float, default=0.1,
                    help="Slip probability in the environment.")
+    p.add_argument("--reward_func", type=callable, default=custom_reward_function,
+                   help="Reward function of the environment.")
     p.add_argument("--fps",       type=int,   default=30,
                    help="Frames per second for GUI.")
     p.add_argument("--episodes",  type=int,   default=10000,
@@ -68,92 +71,90 @@ def parse_args():
     return p.parse_args()
 
 
-def main(grid_paths, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigma, fps, episodes, iters, random_seed,
+def main(grid, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigma, reward_func, fps, episodes, iters, random_seed,
          epsilon, epsilon_min, decay_rate, gamma, eval_steps, n_eps_gui, delta):
     """Main loop of the program."""
 
-    for grid in grid_paths:  # not yet used, because Q-learning per grid world
+    max_diff_list = []  # For tracking convergence and convergence plot
+    cumulative_reward_list = []
 
-        max_diff_list = []  # For tracking convergence and convergence plot
-        cumulative_reward_list = []
+    grid_ = Grid.load_grid(grid)
 
-        grid_ = Grid.load_grid(grid)
+    if agent_start_pos_col is None or agent_start_pos_row is None:
+        agent_start_pos = None
+    else:
+        agent_start_pos = (agent_start_pos_col, agent_start_pos_row)
+        assert grid_.cells[agent_start_pos_col, agent_start_pos_row] == 0, f"Starting position {agent_start_pos} is not empty in the grid."
 
-        if agent_start_pos_col is None or agent_start_pos_row is None:
-            agent_start_pos = None
+    env = Environment(grid, no_gui, agent_start_pos=agent_start_pos, sigma=sigma, target_fps=fps,
+                        random_seed=random_seed, reward_fn=reward_func)
+
+    if algorithm=='q_learning':
+        # Initialize agent
+        agent = QLearningAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
+    if algorithm == 'mc':
+        agent = MonteCarloAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
+    if algorithm=='dp':
+        agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
+
+    for episode in trange(episodes):
+        #print(episode)
+        if n_eps_gui == -1:
+            no_gui = True
+        elif episode % n_eps_gui == 0:
+            no_gui = False
         else:
-            agent_start_pos = (agent_start_pos_col, agent_start_pos_row)
-            assert grid_.cells[agent_start_pos_col, agent_start_pos_row] == 0, f"Starting position {agent_start_pos} is not empty in the grid."
+            no_gui = True
 
-        env = Environment(grid, no_gui, agent_start_pos=agent_start_pos, sigma=sigma, target_fps=fps,
-                          random_seed=random_seed)
+        # Set up the environment
+        state = env.reset(no_gui=no_gui)
 
         if algorithm=='q_learning':
-            # Initialize agent
-            agent = QLearningAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
-        if algorithm == 'mc':
-            agent = MonteCarloAgent(grid_shape=(grid_.n_rows, grid_.n_cols))
-        if algorithm=='dp':
-            agent = ValueIterationAgent(n_actions=4, gamma=gamma, delta_threshold=delta)
+            agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list)
+            if flag_break:
 
-        for episode in trange(episodes):
-            #print(episode)
-            if n_eps_gui == -1:
-                no_gui = True
-            elif episode % n_eps_gui == 0:
-                no_gui = False
-            else:
-                no_gui = True
-
-            # Set up the environment
-            state = env.reset(no_gui=no_gui)
-
-            if algorithm=='q_learning':
-                agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list)
-                if flag_break:
-
-                    break
-
-            if algorithm == 'mc':
-                agent, max_diff_list, cumulative_reward_list, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
-                if flag_break:
-                    break
-
-            if algorithm == 'dp':
-                agent, q_table, optimal_policy, max_diff_list = train_DP(agent, env, max_iterations=1000)
                 break
 
+        if algorithm == 'mc':
+            agent, max_diff_list, cumulative_reward_list, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
+            if flag_break:
+                break
 
-        if algorithm=='dp':
-            # for state in q_table.keys():
-            #     q_values = q_table[state]
-            #     print(f"  Q-values: {q_values}")
+        if algorithm == 'dp':
+            agent, q_table, optimal_policy, max_diff_list = train_DP(agent, env, max_iterations=1000)
+            break
 
-            # plot_time_series(max_diff_list, y_label='Max difference in Value Function', title = 'Convergence: Max Difference per Iteration')
-            visit_counts, optimal_path = extract_VI_agent_optimal_path(agent, env)
-            plot_policy_heatmap(agent.q_table, visit_counts, grid_.cells)
-            # for i, state in enumerate(optimal_path):
-            #     print(f"{i}: {state}")
 
-        elif algorithm=='q_learning':
-            print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
-            print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
-            agent.epsilon = 0
-            plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
-            plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
-            plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+    if algorithm=='dp':
+        # for state in q_table.keys():
+        #     q_values = q_table[state]
+        #     print(f"  Q-values: {q_values}")
 
-        else:
-            print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
-            print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
-            agent.epsilon = 0
-            plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
-            plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
-            plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+        # plot_time_series(max_diff_list, y_label='Max difference in Value Function', title = 'Convergence: Max Difference per Iteration')
+        visit_counts, optimal_path = extract_VI_agent_optimal_path(agent, env)
+        plot_policy_heatmap(agent.q_table, visit_counts, grid_.cells)
+        # for i, state in enumerate(optimal_path):
+        #     print(f"{i}: {state}")
 
-        # Environment.evaluate_agent(grid, agent, iters, sigma, random_seed=random_seed)
+    elif algorithm=='q_learning':
+        print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
+        print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
+        agent.epsilon = 0
+        plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
+        plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
+        plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+
+    else:
+        print(f'AUC under the learning curve: {calc_auc(cumulative_reward_list)}')
+        print(f'normalized AUC under the learning curve: {calc_normalized_auc(cumulative_reward_list)}')
+        agent.epsilon = 0
+        plot_time_series(max_diff_list, y_label='Max difference in Q-value', title = 'Convergence: Max Difference per Episode')
+        plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title = 'Convergence: Cumulative reward per episode')
+        plot_policy_heatmap(agent.q_table, agent.visit_counts, grid_.cells)
+
+    return cumulative_reward_list
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args.GRID, args.algorithm, args.no_gui, args.agent_start_pos_col, args.agent_start_pos_row, args.sigma, args.fps, args.episodes, args.iter, args.random_seed,
+    main(args.GRID, args.algorithm, args.no_gui, args.agent_start_pos_col, args.agent_start_pos_row, args.sigma, args.reward_func, args.fps, args.episodes, args.iter, args.random_seed,
          args.epsilon, args.epsilon_min, args.decay_rate, args.gamma, args.eval_steps, args.n_eps_gui, args.delta)
