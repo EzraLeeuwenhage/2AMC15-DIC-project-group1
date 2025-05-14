@@ -38,7 +38,6 @@ class MonteCarloAgent(BaseAgent):
         # Exponential epsilon decay from epsilon=1.0 to epsilon_min=0.2
         decay_constant = 5.0 * (np.log(epsilon_max / epsilon_min) / episodes)
         self.epsilon_mc = epsilon_min + (epsilon_max - epsilon_min) * np.exp(-decay_constant * episode)
-        print(f"Epsilon value is: {self.epsilon_mc} for episode number: {episode}")
 
     def _closer_to_termination(self):
         """Keep track in how many consecutive episodes the Q-values did not change significantly. I.e. max_diff of Q-values below some delta."""
