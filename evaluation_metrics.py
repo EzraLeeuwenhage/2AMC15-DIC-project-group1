@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils.reward_functions import custom_reward_function
 import csv
-
+from utils.plots import plot_policy_heatmap
 
 
 def calc_normalized_auc(reward_list, min_reward, max_reward):
@@ -35,6 +35,18 @@ def run_evaluation(
     """
     grid = [grid]  # Needs to be supplied as list
     cumulative_rewards_for_all_episodes = []
+    print(experiment_path)
+
+    # Obtain VI Q-table for MAE comparison
+    _, vi_q_table, _, _ = main(
+        # Specific to the experiment
+        grid=grid, algorithm="dp", agent_start_pos_col=agent_start_pos_col, 
+        agent_start_pos_row=agent_start_pos_row, sigma=sigma, reward_func=reward_func, 
+        gamma=gamma, delta=delta, alpha=alpha, epsilon=epsilon, epsilon_min=epsilon_min,
+        episodes=episodes, iters=iters, early_stopping=early_stopping,
+        # General across experiments
+        random_seed=random_seed_full_experiment, no_gui=True, n_eps_gui=-1, fps=30, output_plots=False
+    )
 
     for repitition in range(number_of_repititions):
         random_seed_run = random_seed_full_experiment + repitition
@@ -66,10 +78,21 @@ def run_evaluation(
     # Minimal reward (or biggest cost is -5) --> minimal reward that could be obtained is -5 * number of steps per episode
     minimal_reward = -5 * iters
     # Maximal reward can be analytically computed for a given grid: maximal_reward = number of steps to reach the target * -1 + reward for reaching the target
-    if grid == "grid_configs/A1_grid.npy":
+    if grid[0] == "grid_configs/A1_grid.npy":
+        grid_name = "A1 grid"
         maximal_reward = (22 * -1) + 1000
     else:
+        grid_name = "Custom grid"
         maximal_reward = (34 * -1) + 1000
+        
+    exp_n = experiment_path.split("/")[1].split("_")[1]
+    exp_name = f"E{exp_n}"
+    suffix = f"{exp_name} on {grid_name}"
+    # Create Q-learning abbreviation
+    if algorithm == "q_learning":
+        algorithm = "QL"
+    # Uppercase algorithm name, mainly for MC and DP
+    algorithm = algorithm.upper()
 
     # Creating cumulative reward plot
     episodes = np.arange(1, cumulative_rewards_for_all_episodes.shape[1]+1)
@@ -79,9 +102,9 @@ def run_evaluation(
     plt.axhline(y=maximal_reward, color='green', linestyle='--', label="Theoretical maximum reward")
     plt.xlabel("Episode")
     plt.ylabel("Cumulative reward")
-    plt.title("Cumulative reward per episode")
+    plt.title(f"Cumulative reward per episode for {algorithm} agent - {suffix}")
     plt.legend()
-    plt.savefig(experiment_path + "cumulative_reward.png")
+    plt.savefig(experiment_path + "cumulative_reward.png", dpi=600)
 
     # Compute summarizing statistics
     auc_exp = calc_normalized_auc(expected_cumulative_reward, minimal_reward, maximal_reward)
@@ -100,13 +123,13 @@ def run_evaluation(
 
     # We also want to plot the policy heatmap plot and compare the values of the Q-table agents to the values via VI. 
     # Policy plot
-
-
-    
-    
+    title = f"Policy heatmap for {algorithm} agent - {suffix}"
+    image = plot_policy_heatmap(q_table, trained_agent.visit_counts, grid_.cells, title, show_image=False)
+    image.savefig(experiment_path + "policy_heatmap.png", dpi=600)
     # Optimal policy? Make sure that we check Q-table optimal policy on all positions of optimal path
-
     # TODO: VI different approach --> how do we even evaluate this?
+    # Q-table comparison? with MAE?
+
 
 
 if __name__ == "__main__":
@@ -125,21 +148,15 @@ if __name__ == "__main__":
     else:
         print("Already in 'test' directory.")
 
-    # run_evaluation(
-    #     grid="grid_configs/A1_grid.npy", sigma=0.2, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
-    #     algorithm="q_learning", epsilon=0.5, epsilon_min=0.01, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
-    #     random_seed_full_experiment=0, number_of_repititions=3, experiment_path=""
-    # )
-
     run_evaluation(
         # Enironment-specific
         grid="grid_configs/A1_grid.npy", sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
         # Agent-specific
         algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
         # General to experimental setup
-        random_seed_full_experiment=0, number_of_repititions=3,
+        random_seed_full_experiment=0, number_of_repititions=2,
         # Saving results
-        experiment_path="experimental_results"
+        experiment_path="experimental_results/experiment_1/grid_A1/q_learning/"
     )
         
 
