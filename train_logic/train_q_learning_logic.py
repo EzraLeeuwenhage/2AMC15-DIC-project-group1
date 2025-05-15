@@ -22,11 +22,9 @@ except ModuleNotFoundError:
     from agents.random_agent import RandomAgent
 
 
-def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, early_stopping, cumulative_reward_list):
+def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, early_stopping, cumulative_reward_list):
     """Main loop of the program."""
-    #print(agent.visit_counts)
-    if (episode % 100 == 0) and (episode != 0):
-        agent._dynamic_params()
+    agent.initialize_epsilon(episode, episodes, epsilon, epsilon_min)
 
     q_table_old = {
         state: values.copy()   # if `values` is a NumPy array; or list(values) if it’s a list

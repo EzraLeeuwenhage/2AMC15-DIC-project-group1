@@ -44,6 +44,12 @@ class QLearningAgent(BaseAgent):
         if state not in self.q_table:
             self.q_table[state] = np.array([0.0 for _ in self.actions])
 
+    def initialize_epsilon(self, episode, episodes, epsilon_max, epsilon_min):
+        '''Initialize epsilon for current episode based on epsilon decay from epsilon to epsilon_min'''
+        # Exponential epsilon decay from epsilon=1.0 to epsilon_min=0.2
+        decay_constant = 5.0 * (np.log(epsilon_max / epsilon_min) / episodes)
+        self.epsilon_mc = epsilon_min + (epsilon_max - epsilon_min) * np.exp(-decay_constant * episode)
+
     def take_action(self, state: tuple[int, int]) -> int:
         """Choose some action using epsilon greedy, and before an action is chosen we record the visit to a state."""
         self._ensure_state_exists(state)
