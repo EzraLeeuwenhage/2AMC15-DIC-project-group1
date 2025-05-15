@@ -4,26 +4,18 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.reward_functions import custom_reward_function
-import plotly.graph_objects as go
-import pandas as pd
+import csv
 
-
-# TODO: create experiments file 
 
 
 def calc_normalized_auc(reward_list, min_reward, max_reward):
-    episodes = np.arange(len(reward_list))
-    auc = np.trapz(reward_list, episodes)
-    min_auc = min_reward * (len(reward_list) - 1)
-    max_auc = max_reward * (len(reward_list) - 1)
-    normalized_auc = (auc - min_auc) / (max_auc - min_auc) if max_auc != min_auc else 0
-    return normalized_auc
-
-
-def calc_auc(reward_list):
-    episodes = np.arange(len(reward_list))
-    auc = np.trapz(reward_list, episodes)
-    return auc
+    # area above the min‐baseline
+    area_above_min = np.sum(reward_list - min_reward)
+    # total possible area above the min‐baseline
+    total_area = (max_reward - min_reward) * len(reward_list)
+    # the fraction you want
+    auc_normalized = area_above_min / total_area
+    return auc_normalized
 
 
 def run_evaluation(
@@ -47,13 +39,12 @@ def run_evaluation(
     for repitition in range(number_of_repititions):
         random_seed_run = random_seed_full_experiment + repitition
 
-        cumulative_rewards_for_episode = main(
+        cumulative_rewards_for_episode, q_table, trained_agent, grid_ = main(
             # Specific to the experiment
             grid=grid, algorithm=algorithm, agent_start_pos_col=agent_start_pos_col, 
             agent_start_pos_row=agent_start_pos_row, sigma=sigma, reward_func=reward_func, 
             gamma=gamma, delta=delta, alpha=alpha, epsilon=epsilon, epsilon_min=epsilon_min,
             episodes=episodes, iters=iters, early_stopping=early_stopping,
-            # TODO improve epsilon parameters
             # General across experiments
             random_seed=random_seed_run, no_gui=True, n_eps_gui=-1, fps=30, output_plots=False
         )
@@ -82,8 +73,8 @@ def run_evaluation(
 
     # Creating cumulative reward plot
     episodes = np.arange(1, cumulative_rewards_for_all_episodes.shape[1]+1)
-    plt.plot(episodes, expected_cumulative_reward, label="Expected cumulative reward", color='blue', alpha=0.35, linewidth=1)
-    plt.plot(episodes, lower_bound_cumulative_reward, label="LCB cumulative reward", color='red', alpha=0.35, linewidth=1)
+    plt.plot(episodes, expected_cumulative_reward, label="Expected cumulative reward", color='blue', alpha=0.5, linewidth=1)
+    plt.plot(episodes, lower_bound_cumulative_reward, label="LCB cumulative reward", color='red', alpha=0.5, linewidth=1)
     # plot theoretical maximum reward as dotted horizontal line
     plt.axhline(y=maximal_reward, color='green', linestyle='--', label="Theoretical maximum reward")
     plt.xlabel("Episode")
@@ -93,11 +84,29 @@ def run_evaluation(
     plt.savefig(experiment_path + "cumulative_reward.png")
 
     # Compute summarizing statistics
-    # TODO: Compute and save statistics
+    auc_exp = calc_normalized_auc(expected_cumulative_reward, minimal_reward, maximal_reward)
+    auc_low = calc_normalized_auc(lower_bound_cumulative_reward, minimal_reward, maximal_reward)
+    max_exp = np.max(expected_cumulative_reward)
+    max_low = np.max(lower_bound_cumulative_reward)
 
+    # Saving all statistics to a CSV file
+    fieldnames = ['auc_exp', 'auc_low', 'max_exp', 'max_low', 'maximal_reward']
+    values = [auc_exp,  auc_low,  max_exp,  max_low,  maximal_reward]
+    file_for_results = experiment_path + "numerical_results.csv"
+    with open(file_for_results, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(fieldnames)  # header
+        writer.writerow(values)      # one row of values
+
+    # We also want to plot the policy heatmap plot and compare the values of the Q-table agents to the values via VI. 
+    # Policy plot
+
+
+    
+    
     # Optimal policy? Make sure that we check Q-table optimal policy on all positions of optimal path
 
-    # Policy plot
+    # TODO: VI different approach --> how do we even evaluate this?
 
 
 if __name__ == "__main__":
@@ -121,13 +130,14 @@ if __name__ == "__main__":
     #     algorithm="q_learning", epsilon=0.5, epsilon_min=0.01, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
     #     random_seed_full_experiment=0, number_of_repititions=3, experiment_path=""
     # )
+
     run_evaluation(
         # Enironment-specific
-        grid="grid_configs/A1_grid.npy", sigma=0.02, gamma=0.9, reward_func=None, agent_start_pos_col=9, agent_start_pos_row=13,
+        grid="grid_configs/A1_grid.npy", sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
         # Agent-specific
         algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
         # General to experimental setup
-        random_seed_full_experiment=0, number_of_repititions=10,
+        random_seed_full_experiment=0, number_of_repititions=3,
         # Saving results
         experiment_path="experimental_results"
     )

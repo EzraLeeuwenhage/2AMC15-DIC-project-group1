@@ -69,4 +69,4 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
 
     max_diff_list.append(max_diff)
     
-    return agent, max_diff_list, cumulative_reward_list, False
+    return agent, max_diff_list, cumulative_reward_list, agent.q_table, False  # False is the break flag

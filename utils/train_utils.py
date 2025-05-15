@@ -36,20 +36,20 @@ def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_
         state = env.reset(no_gui=not env_gui)
 
         if algorithm == 'dp':
-            agent, _, _, max_diff_list = train_DP(agent, env, max_iterations=1000)
-            return agent, max_diff_list, None
+            agent, q_table, _, max_diff_list = train_DP(agent, env, max_iterations=1000)
+            return agent, max_diff_list, None, q_table
 
         if algorithm == 'q_learning':
-            agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, early_stopping, cumulative_reward_list)
+            agent, max_diff_list, cumulative_reward_list, q_table, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, early_stopping, cumulative_reward_list)
             if flag_break: 
                 break
 
         if algorithm == 'mc':
-            agent, max_diff_list, cumulative_reward_list, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
+            agent, max_diff_list, cumulative_reward_list, q_table, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
             if flag_break: 
                 break
 
-    return agent, max_diff_list, cumulative_reward_list
+    return agent, max_diff_list, cumulative_reward_list, q_table
 
 
 def evaluate_and_plot(agent, algorithm, grid, env, max_diff_list, cumulative_reward_list):

@@ -68,4 +68,4 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, ep
         else:
             agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
     
-    return agent, max_diff_list, cumulative_reward_list, False
+    return agent, max_diff_list, cumulative_reward_list, agent.q_table, False
