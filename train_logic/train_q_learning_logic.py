@@ -39,13 +39,14 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, ep
         # The action is performed in the environment
         next_state, reward, terminated, info = env.step(action)
 
+        agent.update(state, reward, info["actual_action"], next_state)
+
+        state = next_state
+
         # If the final state is reached, stop.
         if terminated:
             break
 
-        agent.update(state, reward, info["actual_action"], next_state)
-
-        state = next_state
     cumulative_reward_list.append(env.world_stats["cumulative_reward"])
     # max difference in q values
     max_diff = 0
