@@ -71,7 +71,7 @@ def run_evaluation(
         maximal_reward = (22 * -1) + 1000
     else:
         grid_name = "Custom grid"
-        maximal_reward = (34 * -1) + 1000
+        maximal_reward = (32 * -1) + 1000
         
     exp_n = experiment_path.split("/")[1].split("_")[1]
     exp_name = f"E{exp_n}"
