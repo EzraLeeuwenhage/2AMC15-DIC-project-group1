@@ -40,7 +40,7 @@ def calc_auc(reward_list):
     auc = np.trapz(reward_list, episodes)
     return auc
 
-def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: np.ndarray):
+def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: np.ndarray, title=None, show_image=True):
     """
     Plots a heatmap of visit frequencies (viridis), marks obstacles in dark grey,
     and overlays arrows for the optimal action in each visited state.
@@ -111,8 +111,13 @@ def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: 
     ax.set_yticks([])
     ax.set_xlabel('')
     ax.set_ylabel('')
+    if title is not None:
+        ax.set_title(title)
     plt.tight_layout()
-    plt.show()
+    if show_image:
+        plt.show()
+    return fig
+
 
 def extract_VI_agent_optimal_path(agent, env):
     """
