@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     from agents.random_agent import RandomAgent
 
 
-def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list):
+def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, early_stopping, cumulative_reward_list):
     """Main loop of the program."""
     #print(agent.visit_counts)
     if (episode % 100 == 0) and (episode != 0):
@@ -61,12 +61,13 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cu
 
     max_diff_list.append(max_diff)
 
-    # Stopping criterion --> no significant change for N=20 episodes in a row.
-    if max_diff < delta:
-        agent._closer_to_termination()
-        if agent.nr_consecutive_eps_no_change >= 20:
-            return agent, max_diff_list, cumulative_reward_list, True
-    else:
-        agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
+    if early_stopping != -1:
+        # Stopping criterion --> no significant change for N=20 episodes in a row.
+        if max_diff < delta:
+            agent._closer_to_termination()
+            if agent.nr_consecutive_eps_no_change >= early_stopping:
+                return agent, max_diff_list, cumulative_reward_list, True
+        else:
+            agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
     
     return agent, max_diff_list, cumulative_reward_list, False

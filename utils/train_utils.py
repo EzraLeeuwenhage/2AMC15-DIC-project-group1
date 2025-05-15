@@ -27,7 +27,7 @@ def set_agent_start_pos(column, row, grid_cells):
     return position
 
 
-def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui):
+def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui, early_stopping):
     max_diff_list = []
     cumulative_reward_list = []
 
@@ -40,7 +40,7 @@ def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_
             return agent, max_diff_list, None
 
         if algorithm == 'q_learning':
-            agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, cumulative_reward_list)
+            agent, max_diff_list, cumulative_reward_list, flag_break = train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, early_stopping, cumulative_reward_list)
             if flag_break: 
                 break
 

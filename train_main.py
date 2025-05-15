@@ -60,6 +60,8 @@ def parse_args():
                    help="Number of training episodes.")
     p.add_argument("--iters", type=int, default=1000,
                    help="Number of iterations per episode.")
+    p.add_argument("--early_stopping", type=int, default=-1,
+                   help="Number of episodes to wait for early stopping. If -1, no early stopping is used.")
     
     # arguments for output and evaluation settings
     p.add_argument("--n_eps_gui", type=int, default=100,
@@ -72,7 +74,7 @@ def parse_args():
 
 def main(grid, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigma, reward_func, fps, random_seed,
         gamma, delta, 
-        alpha, epsilon, epsilon_min, episodes, iters, 
+        alpha, epsilon, epsilon_min, episodes, iters, early_stopping,
         n_eps_gui, output_plots):
     """Main program for training a specific agent on a specific grid and extracting performance measures."""
     # init environment
@@ -85,7 +87,7 @@ def main(grid, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigm
     # train the agent and collect performance measures
     agent = init_agent(algorithm, grid_.cells.shape, alpha, gamma, delta)
     trained_agent, max_diff_list, cumulative_reward_list = train_agent(
-            algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui)
+            algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui, early_stopping)
             
     # Optionally plot agent performance
     if output_plots:
@@ -99,6 +101,6 @@ if __name__ == '__main__':
     main(args.GRID, args.algorithm, args.no_gui, args.agent_start_pos_col, args.agent_start_pos_row, args.sigma, 
         args.reward_func, args.fps, args.random_seed,
         args.gamma, args.delta,
-        args.alpha, args.epsilon, args.epsilon_min, args.episodes, args.iters,
+        args.alpha, args.epsilon, args.epsilon_min, args.episodes, args.iters, args.early_stopping,
         args.n_eps_gui, args.output_plots
     )
