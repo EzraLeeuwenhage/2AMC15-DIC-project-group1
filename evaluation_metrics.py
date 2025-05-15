@@ -63,18 +63,6 @@ def run_evaluation(
         
         cumulative_rewards_for_all_episodes.append(cumulative_rewards_for_episode)
 
-    # Convert to numpy for faster computations
-    cumulative_rewards_for_all_episodes = np.array(cumulative_rewards_for_all_episodes)
-
-    # Compute per episode mean to get the expected cumulative reward
-    expected_cumulative_reward = np.mean(cumulative_rewards_for_all_episodes, axis=0) 
-
-    # Compute lower confidence bound.
-    z = 1.96
-    std = np.std(cumulative_rewards_for_all_episodes, axis=0, ddof=1)
-    half_width_interval = (z * std / np.sqrt(expected_cumulative_reward.shape[0]))
-    lower_bound_cumulative_reward = expected_cumulative_reward - half_width_interval
-
     # Minimal reward (or biggest cost is -5) --> minimal reward that could be obtained is -5 * number of steps per episode
     minimal_reward = -5 * iters
     # Maximal reward can be analytically computed for a given grid: maximal_reward = number of steps to reach the target * -1 + reward for reaching the target
@@ -93,6 +81,33 @@ def run_evaluation(
         algorithm = "QL"
     # Uppercase algorithm name, mainly for MC and DP
     algorithm = algorithm.upper()
+
+    diffs = []
+    for state, v_vals in vi_q_table.items():
+        # find best action under V
+        best_a = np.argmax(v_vals)
+        v_best = v_vals[best_a]
+        # get value of Q-table at that same action
+        if state not in q_table:
+            q_best = 0
+        else:
+            q_best = q_table[state][best_a]
+        # record absolute difference
+        diffs.append(abs(v_best - q_best))
+    # compute MAE
+    mae = np.mean(diffs)
+
+    # Convert to numpy for faster computations
+    cumulative_rewards_for_all_episodes = np.array(cumulative_rewards_for_all_episodes)
+
+    # Compute per episode mean to get the expected cumulative reward
+    expected_cumulative_reward = np.mean(cumulative_rewards_for_all_episodes, axis=0) 
+
+    # Compute lower confidence bound.
+    z = 1.96
+    std = np.std(cumulative_rewards_for_all_episodes, axis=0, ddof=1)
+    half_width_interval = (z * std / np.sqrt(expected_cumulative_reward.shape[0]))
+    lower_bound_cumulative_reward = expected_cumulative_reward - half_width_interval
 
     # Creating cumulative reward plot
     episodes = np.arange(1, cumulative_rewards_for_all_episodes.shape[1]+1)
@@ -113,8 +128,8 @@ def run_evaluation(
     max_low = np.max(lower_bound_cumulative_reward)
 
     # Saving all statistics to a CSV file
-    fieldnames = ['auc_exp', 'auc_low', 'max_exp', 'max_low', 'maximal_reward']
-    values = [auc_exp,  auc_low,  max_exp,  max_low,  maximal_reward]
+    fieldnames = ['auc_exp', 'auc_low', 'max_exp', 'max_low', 'maximal_reward', 'MAE']
+    values = [auc_exp,  auc_low,  max_exp,  max_low,  maximal_reward, mae]
     file_for_results = experiment_path + "numerical_results.csv"
     with open(file_for_results, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -126,10 +141,6 @@ def run_evaluation(
     title = f"Policy heatmap for {algorithm} agent - {suffix}"
     image = plot_policy_heatmap(q_table, trained_agent.visit_counts, grid_.cells, title, show_image=False)
     image.savefig(experiment_path + "policy_heatmap.png", dpi=600)
-    # Optimal policy? Make sure that we check Q-table optimal policy on all positions of optimal path
-    # TODO: VI different approach --> how do we even evaluate this?
-    # Q-table comparison? with MAE?
-
 
 
 if __name__ == "__main__":
@@ -148,11 +159,22 @@ if __name__ == "__main__":
     else:
         print("Already in 'test' directory.")
 
+    # run_evaluation(
+    #     # Enironment-specific
+    #     grid="grid_configs/A1_grid.npy", sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
+    #     # Agent-specific
+    #     algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
+    #     # General to experimental setup
+    #     random_seed_full_experiment=0, number_of_repititions=2,
+    #     # Saving results
+    #     experiment_path="experimental_results/experiment_1/grid_A1/q_learning/"
+    # )
+
     run_evaluation(
         # Enironment-specific
-        grid="grid_configs/A1_grid.npy", sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
+        grid="grid_configs/long_distance_narrow.npy", sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=1, agent_start_pos_row=18,
         # Agent-specific
-        algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
+        algorithm="q_learning", epsilon=1, epsilon_min=0.000001, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
         # General to experimental setup
         random_seed_full_experiment=0, number_of_repititions=2,
         # Saving results
