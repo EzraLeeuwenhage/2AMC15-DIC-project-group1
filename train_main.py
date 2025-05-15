@@ -6,6 +6,7 @@ from pathlib import Path
 from world.grid import Grid
 from utils.train_utils import init_agent, train_agent, evaluate_and_plot, set_agent_start_pos
 from utils.reward_functions import custom_reward_function
+import numpy as np
 
 try:
     from world import Environment
@@ -85,6 +86,7 @@ def main(grid, algorithm, no_gui, agent_start_pos_col, agent_start_pos_row, sigm
                         random_seed=random_seed, reward_fn=reward_func)
 
     # train the agent and collect performance measures
+    np.random.seed(random_seed)
     agent = init_agent(algorithm, grid_.cells.shape, alpha, gamma, delta)
     trained_agent, max_diff_list, cumulative_reward_list = train_agent(
             algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui, early_stopping)
