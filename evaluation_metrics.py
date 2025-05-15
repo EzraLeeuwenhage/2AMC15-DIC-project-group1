@@ -172,9 +172,9 @@ if __name__ == "__main__":
 
     run_evaluation(
         # Enironment-specific
-        grid="grid_configs/long_distance_narrow.npy", sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=1, agent_start_pos_row=18,
+        grid="grid_configs/long_distance_narrow.npy", sigma=0, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=1, agent_start_pos_row=18,
         # Agent-specific
-        algorithm="q_learning", epsilon=1, epsilon_min=0.000001, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
+        algorithm="q_learning", epsilon=1, epsilon_min=0.0000001, delta=1e-6, alpha=0.1, episodes=15000, iters=500, early_stopping=-1,
         # General to experimental setup
         random_seed_full_experiment=0, number_of_repititions=2,
         # Saving results
