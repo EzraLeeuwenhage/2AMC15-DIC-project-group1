@@ -41,10 +41,6 @@ def train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, ep
         # The action is performed in the environment
         next_state, reward, terminated, info = env.step(action)
 
-        # Give additional reward on reaching the end goal, minus the steps it took to reach, encouraging the agent to reach faster
-        if terminated:
-            reward = 1_000
-
         # Update episode-history
         agent.update(state, reward, info["actual_action"])
 
