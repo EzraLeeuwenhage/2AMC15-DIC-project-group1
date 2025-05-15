@@ -99,7 +99,6 @@ def run_evaluation(
 
     # Convert to numpy for faster computations
     cumulative_rewards_for_all_episodes = np.array(cumulative_rewards_for_all_episodes)
-
     # Compute per episode mean to get the expected cumulative reward
     expected_cumulative_reward = np.mean(cumulative_rewards_for_all_episodes, axis=0) 
 
@@ -141,6 +140,7 @@ def run_evaluation(
     title = f"Policy heatmap for {algorithm} agent - {suffix}"
     image = plot_policy_heatmap(q_table, trained_agent.visit_counts, grid_.cells, title, show_image=False)
     image.savefig(experiment_path + "policy_heatmap.png", dpi=600)
+    plt.close('all')
 
 
 if __name__ == "__main__":

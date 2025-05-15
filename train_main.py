@@ -31,9 +31,9 @@ def parse_args():
                    help="algortihm to train.")
     p.add_argument("--no_gui",    action="store_true",
                    help="Disable rendering to train faster.")
-    p.add_argument("--agent_start_pos_col",    type=int,   default=None,
+    p.add_argument("--agent_start_pos_col",    type=int,   default=9,
                    help="Starting position column of the agent in the gui representation of the grid. If None then random start position.")
-    p.add_argument("--agent_start_pos_row",    type=int,   default=None,
+    p.add_argument("--agent_start_pos_row",    type=int,   default=10,
                    help="Starting position row of the agent in the gui representation of the grid. If None then random start position.")
     p.add_argument("--sigma",     type=float, default=0.1,
                    help="Slip probability in the environment.")
