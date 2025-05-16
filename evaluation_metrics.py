@@ -97,8 +97,28 @@ def run_evaluation(
     # compute MAE
     mae = np.mean(diffs)
 
+    vi_optimal_action_per_state = {}
+    for state, v_vals in vi_q_table.items():
+        # find best action under V for every state and store it as value in new dictionary
+        best_a = np.argmax(v_vals)
+        vi_optimal_action_per_state[state] = best_a
+    approach_optimal_action_per_state = {}
+    for state, q_vals in q_table.items():
+        # find best action under Q for every state and store it as value in new dictionary
+        best_a = np.argmax(q_vals)
+        approach_optimal_action_per_state[state] = best_a
+    # Compare the two dictionaries: return proportion of states where the best action is the same
+    num_same = 0
+    for state in vi_optimal_action_per_state:
+        if state in approach_optimal_action_per_state:
+            if vi_optimal_action_per_state[state] == approach_optimal_action_per_state[state]:
+                num_same += 1
+    # Compute the proportion of states where the best action is the same
+    prop_correct_actions_on_grid = num_same / len(vi_optimal_action_per_state)
+
     # Convert to numpy for faster computations
     cumulative_rewards_for_all_episodes = np.array(cumulative_rewards_for_all_episodes)
+
     # Compute per episode mean to get the expected cumulative reward
     expected_cumulative_reward = np.mean(cumulative_rewards_for_all_episodes, axis=0) 
 
@@ -127,8 +147,8 @@ def run_evaluation(
     max_low = np.max(lower_bound_cumulative_reward)
 
     # Saving all statistics to a CSV file
-    fieldnames = ['auc_exp', 'auc_low', 'max_exp', 'max_low', 'maximal_reward', 'MAE']
-    values = [auc_exp,  auc_low,  max_exp,  max_low,  maximal_reward, mae]
+    fieldnames = ['auc_exp', 'auc_low', 'max_exp', 'max_low', 'maximal_reward', 'MAE', 'proportion_policy_correct']
+    values = [auc_exp,  auc_low,  max_exp,  max_low,  maximal_reward, mae, prop_correct_actions_on_grid]
     file_for_results = experiment_path + "numerical_results.csv"
     with open(file_for_results, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -178,7 +198,5 @@ if __name__ == "__main__":
         # General to experimental setup
         random_seed_full_experiment=0, number_of_repititions=2,
         # Saving results
-        experiment_path="experimental_results/experiment_1/grid_A1/q_learning/"
+        experiment_path="experimental_results_2/experiment_1/grid_custom/q_learning/"
     )
-        
-
