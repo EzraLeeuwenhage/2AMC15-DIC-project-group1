@@ -8,11 +8,12 @@ The project is organized as follows:
 - **world/**: Code for the environment, grid, GUI, and grid creation tools.
 - **utils/**: Helper functions for training, evaluation, plotting, and custom rewards.
 - **grid_configs/**: Stores grid files used for experiments.
-- **train_main.py**: Main entry point for training a specific agent on a specific grid with specific environment and experiment settings.
 - **train_logic/**: Contains the logic for training individual algorithms.
-- **run_experiments.py**: Define a series of experiment settings (algorithm, environment, and experiment settings) and call train_main logic to run each experiment.
 - **experimental_results/**: Stores results generated for the final report and experiments.
 - **deprecated/**: Deprecated scripts and code no longer in active use.
+- **run_experiments.py**: Define a series of experiment settings (algorithm, environment, and experiment settings) and call evaluate_metrics.py logic to run each experiment.
+- **train_main.py**: Main entry point for training a specific agent on a specific grid with specific environment and experiment settings.
+- **evaluation_metrics.py**: Basically a wrapper for the train_main.py file, which allows us to run all evaluation metrics for the experiments. 
 - **requirements.txt**: Lists required Python packages.
 - **README.md**: Project documentation and usage instructions.
 
