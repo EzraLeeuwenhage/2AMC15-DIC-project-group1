@@ -198,5 +198,5 @@ if __name__ == "__main__":
         # General to experimental setup
         random_seed_full_experiment=0, number_of_repititions=2,
         # Saving results
-        experiment_path="experimental_results_2/experiment_1/grid_custom/q_learning/"
+        experiment_path="experimental_results/experiment_1/grid_custom/q_learning/"
     )

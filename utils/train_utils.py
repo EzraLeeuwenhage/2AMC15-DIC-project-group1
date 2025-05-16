@@ -5,10 +5,14 @@ from agents.monte_carlo_agent_v2 import MonteCarloAgent
 from train_logic.train_DP_logic import train_DP
 from train_logic.train_q_learning_logic import train_q_learning
 from train_logic.train_mc_v2_logic import train_mc_control
-from utils.plots import plot_time_series, plot_policy_heatmap, calc_auc, calc_normalized_auc, extract_VI_agent_optimal_path
+from utils.plots import plot_time_series, plot_policy_heatmap, extract_VI_agent_optimal_path
 
 
 def init_agent(algorithm, grid_shape, alpha, gamma, delta):
+    """
+    Initialize the correct agent given the chosen algorithm by the user
+    Returns: Agent class instance
+    """
     match algorithm:
         case 'q_learning':
             return QLearningAgent(grid_shape=grid_shape, actions=[0, 1, 2, 3], alpha=alpha, gamma=gamma)
@@ -19,6 +23,9 @@ def init_agent(algorithm, grid_shape, alpha, gamma, delta):
 
 
 def set_agent_start_pos(column, row, grid_cells):
+    """
+    sets the start position of the agent and gives an error when the chosen position is not possible
+    """
     if column is None or row is None:
         return None
 
@@ -28,6 +35,10 @@ def set_agent_start_pos(column, row, grid_cells):
 
 
 def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_min, n_eps_gui, early_stopping):
+    """
+    calls the correct train logic for the agent
+    returns: the trained agent and its results
+    """
     max_diff_list = []
     cumulative_reward_list = []
 
@@ -45,7 +56,7 @@ def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_
                 break
 
         if algorithm == 'mc':
-            agent, max_diff_list, cumulative_reward_list, q_table, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
+            agent, max_diff_list, cumulative_reward_list, q_table, flag_break = train_mc_control(agent, state, env, iters, max_diff_list, episode, episodes, epsilon, epsilon_min, cumulative_reward_list)
             if flag_break: 
                 break
 
@@ -53,13 +64,14 @@ def train_agent(algorithm, agent, env, episodes, iters, delta, epsilon, epsilon_
 
 
 def evaluate_and_plot(agent, algorithm, grid, env, max_diff_list, cumulative_reward_list):
+    """
+    Evaluates the agent and plots the results
+    """
     if algorithm == 'dp':
         visit_counts, _ = extract_VI_agent_optimal_path(agent, env)
         plot_policy_heatmap(agent.q_table, visit_counts, grid.cells)
 
     elif algorithm in ('q_learning', 'mc'):
-        print(f'AUC: {calc_auc(cumulative_reward_list)}')
-        print(f'Normalized AUC: {calc_normalized_auc(cumulative_reward_list)}')
         agent.epsilon = 0  # Turn off exploration
         plot_time_series(max_diff_list, y_label='Max difference in Q-value', title='Convergence')
         plot_time_series(cumulative_reward_list, y_label='Cumulative reward', title='Reward per Episode')

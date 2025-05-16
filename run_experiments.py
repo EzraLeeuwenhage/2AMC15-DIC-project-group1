@@ -110,22 +110,22 @@ run_evaluation(
     experiment_path="experimental_results/experiment_5/grid_A1/q_learning/"
 )
 
-### Experiment 6 (n_episodes = 30000) #####
+### Experiment 7 (iterations = 1000) #####
 run_evaluation(
     # Enironment-specific
     grid=grid_A1, sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
     # Agent-specific
-    algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=30000, iters=500, early_stopping=-1,
+    algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=1000, early_stopping=-1,
     # General to experimental setup
     random_seed_full_experiment=0, number_of_repititions=number_of_reps,
     # Saving results
-    experiment_path="experimental_results/experiment_6/grid_A1/q_learning/"
+    experiment_path="experimental_results_2/experiment_7/grid_A1/q_learning/"
 )
 run_evaluation(
     # Enironment-specific
     grid=grid_A1, sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=9, agent_start_pos_row=13,
     # Agent-specific
-    algorithm="mc", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=30000, iters=500, early_stopping=-1,
+    algorithm="mc", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=1000, early_stopping=-1,
     # General to experimental setup
     random_seed_full_experiment=0, number_of_repititions=number_of_reps,
     # Saving results
@@ -237,12 +237,14 @@ run_evaluation(
     experiment_path="experimental_results/experiment_5/grid_custom/q_learning/"
 )
 
-### Experiment 6 (n_episodes = 30000) #####
+
+
+### Experiment 6 (iterations = 1000) #####
 run_evaluation(
     # Enironment-specific
     grid=grid_custom, sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=1, agent_start_pos_row=18,
     # Agent-specific
-    algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=30000, iters=500, early_stopping=-1,
+    algorithm="q_learning", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=1000, early_stopping=-1,
     # General to experimental setup
     random_seed_full_experiment=0, number_of_repititions=number_of_reps,
     # Saving results
@@ -253,7 +255,7 @@ run_evaluation(
     # Enironment-specific
     grid=grid_custom, sigma=0.02, gamma=0.9, reward_func=custom_reward_function, agent_start_pos_col=1, agent_start_pos_row=18,
     # Agent-specific
-    algorithm="mc", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=30000, iters=500, early_stopping=-1,
+    algorithm="mc", epsilon=1, epsilon_min=0.1, delta=1e-6, alpha=0.1, episodes=15000, iters=1000, early_stopping=-1,
     # General to experimental setup
     random_seed_full_experiment=0, number_of_repititions=number_of_reps,
     # Saving results
