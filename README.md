@@ -80,27 +80,27 @@ run_evaluation(
 )
 ```
 
-## Environment-specific
+#### Environment-specific
 
 - Define the grid, stochasticity (sigma), discount factor (gamma), reward function, and agent starting position.
 
-## Agent-specific
+#### Agent-specific
 
 - Choose the algorithm and its hyperparameters.
 
-## General setup
+#### General setup
 
 - Set the random seed and number of repetitions for statistical robustness.
 
-## experiment_path
+#### Saving results
 
 - Specify where the results for this experiment will be saved. This should be a unique path for each experiment.
 
 ## Running the Experiments
 
 1. Open `run_experiments.py` and define your experiments using the format above.
-2. Save the file.
-3. Run the experiments from the terminal:
+2. Save the file (if you made changes).
+3. Run the experiments from the terminal or directly from code editor:
    ```bash
    python run_experiments.py
    ```
