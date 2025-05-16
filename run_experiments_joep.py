@@ -1,5 +1,8 @@
 from evaluation_metrics import run_evaluation
 from utils.reward_functions import custom_reward_function
+import os
+
+os.chdir("2AMC15-DIC-project-group1")
 
 grid_A1 = "grid_configs/A1_grid.npy"
 grid_custom = "grid_configs/long_distance_narrow.npy"
