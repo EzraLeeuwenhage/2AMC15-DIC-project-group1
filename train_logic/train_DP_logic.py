@@ -1,11 +1,13 @@
 import numpy as np
 
 def one_hot_encode(index, size):
+    """Return a one-hot encoded vector of given size for the specified index."""
     vec = [0] * size
     vec[index] = 1
     return vec
 
 def train_DP(agent, env, max_iterations):
+    """Train a DP agent using value iteration and return results."""
     _ = env.reset()
     grid = np.copy(env.grid)
     reward_fn = env.reward_fn

@@ -1,54 +1,26 @@
-from agents.q_learning_agent import QLearningAgent
-from argparse import ArgumentParser
-from pathlib import Path
-from tqdm import trange
 import numpy as np
-from world.grid import Grid  # Import the Grid class
 
-
-try:
-    from world import Environment
-    from agents.random_agent import RandomAgent
-except ModuleNotFoundError:
-    from os import path
-    from os import pardir
-    import sys
-    root_path = path.abspath(path.join(
-        path.join(path.abspath(__file__), pardir), pardir)
-    )
-    if root_path not in sys.path:
-        sys.path.extend(root_path)
-    from world import Environment
-    from agents.random_agent import RandomAgent
-
-
-def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, episodes, epsilon, epsilon_min, early_stopping, cumulative_reward_list):
-    """Main loop of the program."""
+def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, episodes, 
+                     epsilon, epsilon_min, early_stopping, cumulative_reward_list):
+    """Train a Q-learning agent for one episode and track Q-value changes with early stopping."""
     agent.initialize_epsilon(episode, episodes, epsilon, epsilon_min)
 
     q_table_old = {
-        state: values.copy()   # if `values` is a NumPy array; or list(values) if it’s a list
+        state: values.copy()
         for state, values in agent.q_table.items()
     }
 
     for _ in range(iters):
-
-        # Agent takes an action based on the latest observation and info.
         action = agent.take_action(state)
-
-        # The action is performed in the environment
         next_state, reward, terminated, info = env.step(action)
-
         agent.update(state, reward, info["actual_action"], next_state)
-
         state = next_state
 
-        # If the final state is reached, stop.
-        if terminated:
+        if terminated: # If the final state is reached, stop the episode
             break
 
+    # Cumulative reward update for AUC Curve
     cumulative_reward_list.append(env.world_stats["cumulative_reward"])
-    # max difference in q values
     max_diff = 0
     all_in_common_keys = set(agent.q_table.keys()) & set(q_table_old.keys())
     for key in all_in_common_keys:
@@ -56,7 +28,7 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, ep
         if abs_diff > max_diff:
             max_diff = abs_diff
     if len(all_in_common_keys) == 0:
-        max_diff = 1 # np.inf
+        max_diff = 1
 
     max_diff_list.append(max_diff)
 
@@ -67,6 +39,6 @@ def train_q_learning(agent, state, env, iters, max_diff_list, delta, episode, ep
             if agent.nr_consecutive_eps_no_change >= early_stopping:
                 return agent, max_diff_list, cumulative_reward_list, True
         else:
-            agent._significant_change_to_q_values()  # resetting counter of consecutive episodes of no change
+            agent._significant_change_to_q_values()  # resetting counter of episodes without change
     
     return agent, max_diff_list, cumulative_reward_list, agent.q_table, False
