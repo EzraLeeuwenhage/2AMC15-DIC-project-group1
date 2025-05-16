@@ -14,6 +14,10 @@ def plot_time_series(value_list, y_label = '', title=''):
     -----------
     value_list : list of float
         value_list[i] is the value in episode i.
+    y_label : str
+        y-axis label.
+    title : str
+        plot title.
     """
     episodes = range(len(value_list))
     plt.figure(figsize=(8, 4))
@@ -25,28 +29,17 @@ def plot_time_series(value_list, y_label = '', title=''):
     plt.tight_layout()
     plt.show()
 
-def calc_normalized_auc(reward_list):
-    episodes = np.arange(len(reward_list))
-    auc = np.trapz(reward_list, episodes)
-    min_reward = min(reward_list)
-    max_reward = max(reward_list)
-    min_auc = min_reward * (len(reward_list) - 1)
-    max_auc = max_reward * (len(reward_list) - 1)
-    normalized_auc = (auc - min_auc) / (max_auc - min_auc) if max_auc != min_auc else 0
-    return normalized_auc
-
-def calc_auc(reward_list):
-    episodes = np.arange(len(reward_list))
-    auc = np.trapz(reward_list, episodes)
-    return auc
 
 def plot_policy_heatmap(q_table: dict, visit_counts: np.ndarray, layout_matrix: np.ndarray, title=None, show_image=True):
     """
     Plots a heatmap of visit frequencies (viridis), marks obstacles in dark grey,
     and overlays arrows for the optimal action in each visited state.
 
-    Args:
-        layout_matrix (2D array of ints): different integers indicate different entities.
+    Parameters:
+    -----------
+    q_table (dict): Q-table with state-action values.
+    visit_counts (array): 2 dimensional array of visit counts.
+    layout_matrix (array of ints): different integers indicate different entities.
         "empty": 0,
         "boundary": 1,
         "obstacle": 2,
@@ -124,11 +117,14 @@ def extract_VI_agent_optimal_path(agent, env):
     Executes the optimal policy (from the value iteration agent) in the environment
     and returns a visit_counts array highlighting the optimal path.
 
-    Args:
+    Parameters
+    ----------
         env: environment which agent was trained on.
 
-    Returns:
+    Returns
+    -------
         visit_counts: 2D array with 1s along the optimal path, 0s elsewhere.
+        optimal_path: list of tuples with the optimal path.
     """
     state = env.reset()
     env.no_gui = True
