@@ -1,4 +1,4 @@
-Adjusted readme.md for our project. Note that it is important to have a working environment with all dependencies. 
+Adjusted readme.md for our project. Note that it is important to have a working environment with all dependencies as noted in the requirements.txt. 
 
 ## Folder Structure
 
@@ -16,10 +16,39 @@ The project is organized as follows:
 - **requirements.txt**: Lists required Python packages.
 - **README.md**: Project documentation and usage instructions.
 
+## How to Run an Agent
+
+Training a single agent is efficient, it will be done in a couple of minutes maximum. For this we need to call the train_main.py file. This is easiest to do from the command prompt, and to give it the necessary arguments. 
+
+Example command: ``python train_main.py grid_configs/A1_grid.npy --episodes=15000 --algorithm=q_learning --n_eps_gui=5000 --iter=1000 --agent_start_pos_col=9 --agent_start_pos_row=13``
+
+For a full list of command options see the table below:
+
+| Flag                         | Type      | Default                     | Description                                                                                                   |
+|------------------------------|-----------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
+| `GRID`                       | `Path`    | —                           | One or more grid file(s) to use for training (e.g. `grid_configs/A1_grid.npy`).                                       |
+| `--algorithm`                | `str`     | `None`                      | Which RL algorithm to train (e.g. `q_learning`, `monte_carlo`).                                               |
+| `--no_gui`                   | `boolean` | `False`                     | Disable rendering (GUI) to train faster.                                                                      |
+| `--agent_start_pos_col`      | `int`     | `9`                         | Starting column of the agent in the GUI. If `None`, starts at a random position.                              |
+| `--agent_start_pos_row`      | `int`     | `10`                        | Starting row of the agent in the GUI. If `None`, starts at a random position.                                 |
+| `--sigma`                    | `float`   | `0.1`                       | Slip probability in the environment dynamics.                                                                 |
+| `--reward_func`              | `callable`| `custom_reward_function`    | Reward function for the environment (must be a Python callable).                                              |
+| `--fps`                      | `int`     | `30`                        | Frames per second for the GUI rendering.                                                                      |
+| `--random_seed`              | `int`     | `0`                         | Random seed for reproducibility.                                                                              |
+| `--gamma`                    | `float`   | `0.9`                       | Discount factor for future rewards.                                                                           |
+| `--delta`                    | `float`   | `1e-6`                      | Threshold for Q-value updates for early stopping (convergence criterion).                                     |
+| `--alpha`                    | `float`   | `0.1`                       | Learning rate (for Monte Carlo & Q-learning algorithms).                                                      |
+| `--epsilon`                  | `float`   | `1.0`                       | Starting ε value for ε-greedy exploration.                                                                    |
+| `--epsilon_min`              | `float`   | `0.1`                       | Minimum ε value after decay.                                                                                  |
+| `--episodes`                 | `int`     | `10000`                     | Total number of training episodes.                                                                            |
+| `--iters`                    | `int`     | `1000`                      | Maximum number of iterations (steps) per episode.                                                             |
+| `--early_stopping`           | `int`     | `-1`                        | Number of episodes with no improvement to wait before stopping early (`-1` = disabled).                      |
+| `--n_eps_gui`                | `int`     | `100`                       | Show the GUI every N episodes (if GUI is enabled).                                                            |
+| `--output_plots`             | `boolean` | `False`                     | Generate and save learning-curve plots at the end of training.                                                |
 
 ## How to Run Experiments
 
-To run experiments, you should use the `run_experiments.py` script. This script allows you to define a series of experiments by specifying all relevant environment, agent, and experiment settings in a structured way. Each experiment is configured by calling the `run_evaluation` function with your desired parameters.
+To run experiments, you should use the `run_experiments.py` script. This script allows you to define a series of experiments by specifying all relevant environment, agent, and experiment settings in a structured way. Each experiment is configured by calling the `run_evaluation` function with your desired parameters. No further command line arguments are necessary, as it is defined in the code. Note that the full set of experiments might take hours to complete.
 
 ### Example Experiment Definition
 
