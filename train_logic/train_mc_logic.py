@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 
 
 def train_mc(agent, env, iters, epsilon, epsilon_min, decay_rate, episode, max_diff_list):
-
+    """Train a Monte Carlo agent for one episode with epsilon decay."""
     # exponential decay of epsilon
     agent.epsilon = epsilon_min + (
             epsilon - epsilon_min
@@ -37,12 +37,10 @@ def train_mc(agent, env, iters, epsilon, epsilon_min, decay_rate, episode, max_d
 
     agent.update_episode(episode_list)
 
-    #TODO: implement max diff list
-
     return agent, max_diff_list
 
-def train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episode, max_diff_list):
-    # exponential decay of epsilon
+def train_mc2(agent, state, env, epsilon, epsilon_min, decay_rate, episode, max_diff_list):
+    """Train a Monte Carlo agent for one episode with adaptive max steps and epsilon decay."""
     agent.epsilon = epsilon_min + (
             epsilon - epsilon_min
     ) * np.exp(-decay_rate * episode)
@@ -61,11 +59,11 @@ def train_mc2(agent, state, env, iters, epsilon, epsilon_min, decay_rate, episod
         step += 1
 
     agent.update_episode(episode_list)
-    #TODO: implement max diff list
 
     return agent, max_diff_list
 
 def train_mc3(agent, state, env, iters, nr_of_episodes, delta, max_diff_list):
+    """Train a Monte Carlo agent with dynamic parameters and early stopping based on Q-value changes."""
     agent._dynamic_params(nr_of_episodes)
 
     q_table_old = {
