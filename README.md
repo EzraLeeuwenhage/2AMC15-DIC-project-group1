@@ -27,9 +27,8 @@ For a full list of command options see the table below:
 
 | Flag                         | Type      | Default                     | Description                                                                                                   |
 |------------------------------|-----------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
-| `GRID`                       | `Path`    | —                           | One or more grid file(s) to use for training (e.g. `grid_configs/A1_grid.npy`).                                       |
-| `--algorithm`                | `str`     | `None`                      | Which RL algorithm to train (e.g. `q_learning`, `monte_carlo`).                                               |
-| `--no_gui`                   | `boolean` | `False`                     | Disable rendering (GUI) to train faster.                                                                      |
+| `GRID`                       | `Path`    | —                           | One or more grid file(s) to use for training (e.g. `grid_configs/A1_grid.npy`).                               |
+| `--algorithm`                | `str`     | `None`                      | Which RL algorithm to train (e.g. `q_learning`, `mc`, `dp`).                                                  |
 | `--agent_start_pos_col`      | `int`     | `9`                         | Starting column of the agent in the GUI. If `None`, starts at a random position.                              |
 | `--agent_start_pos_row`      | `int`     | `10`                        | Starting row of the agent in the GUI. If `None`, starts at a random position.                                 |
 | `--sigma`                    | `float`   | `0.1`                       | Slip probability in the environment dynamics.                                                                 |
@@ -38,14 +37,14 @@ For a full list of command options see the table below:
 | `--random_seed`              | `int`     | `0`                         | Random seed for reproducibility.                                                                              |
 | `--gamma`                    | `float`   | `0.9`                       | Discount factor for future rewards.                                                                           |
 | `--delta`                    | `float`   | `1e-6`                      | Threshold for Q-value updates for early stopping (convergence criterion).                                     |
-| `--alpha`                    | `float`   | `0.1`                       | Learning rate (for Monte Carlo & Q-learning algorithms).                                                      |
+| `--alpha`                    | `float`   | `0.1`                       | Learning rate (for Q-learning algorithms).                                                                    |
 | `--epsilon`                  | `float`   | `1.0`                       | Starting ε value for ε-greedy exploration.                                                                    |
 | `--epsilon_min`              | `float`   | `0.1`                       | Minimum ε value after decay.                                                                                  |
 | `--episodes`                 | `int`     | `10000`                     | Total number of training episodes.                                                                            |
 | `--iters`                    | `int`     | `1000`                      | Maximum number of iterations (steps) per episode.                                                             |
-| `--early_stopping`           | `int`     | `-1`                        | Number of episodes with no improvement to wait before stopping early (`-1` = disabled).                      |
-| `--n_eps_gui`                | `int`     | `100`                       | Show the GUI every N episodes (if GUI is enabled).                                                            |
-| `--output_plots`             | `boolean` | `False`                     | Generate and save learning-curve plots at the end of training.                                                |
+| `--early_stopping`           | `int`     | `-1`                        | Number of episodes with no improvement to wait before stopping early (`-1` = disabled).                       |
+| `--n_eps_gui`                | `int`     | `100`                       | Show the GUI every N episodes, -1 if you want to disable the GUI completely                                   |
+| `--output_plots`             | `boolean` | `False`                     | Show plots convergence plot and policy heatmap at the end of training.                                        |
 
 ## How to Run Experiments
 
